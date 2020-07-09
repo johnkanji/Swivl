@@ -1,7 +1,7 @@
 import XCTest
 
-import GeometryTests
+import SwigglTests
 
 var tests = [XCTestCaseEntry]()
-tests += GeometryTests.allTests()
+tests += SwigglTests.allTests()
 XCTMain(tests)

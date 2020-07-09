@@ -1,34 +1,30 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.2
 // Package.swift
 //
-// Copyright (c) 2017 Alexander Taraymovich <taraymovich@me.com>
-// All rights reserved.
-//
-// This software may be modified and distributed under the terms
-// of the BSD license. See the LICENSE file for details.
+
 import PackageDescription
 
 let package = Package(
-  name: "SwiftMat",
+  name: "Swiggl",
   platforms: [.macOS(.v10_15)],
   products: [
     .executable(name: "Test", targets: ["Test"]),
-    .library(name: "SwiftMat", targets: ["SwiftMat"]),
-  ],
-  dependencies: [
+    .library(name: "Swiggl", targets: ["Swiggl"]),
+    .library(name: "Swivl", targets: ["Swivl"])
   ],
   targets: [
+    .target(name: "BLAS"),
+    .target(
+      name: "Swiggl",
+      dependencies: ["Swivl"]),
+    .target(
+      name: "Swivl",
+      dependencies: ["BLAS"]),
     .target(
       name:"Test",
-      dependencies: [
-        "SwiftMat"
-      ]),
-    .target(
-      name: "SwiftMat",
-      dependencies: [
-      ]),
+      dependencies: ["Swiggl", "BLAS"]),
     .testTarget(
-      name: "SwiftMatTests",
-      dependencies: ["SwiftMat"])
+      name: "SwigglTests",
+      dependencies: ["Swiggl"])
   ]
 )
