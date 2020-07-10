@@ -13,17 +13,35 @@ import Accelerate
 extension BLAS {
   
 //  MARK: Cholesky
-  //  TODO: STUB
-  public static func chol<T>(_ a: [T], _ shape: RowCol) -> [T] where T: AccelerateFloatingPoint {
-    return []
-  }
-  
 
+  public static func chol<T>(_ a: [T], _ shape: RowCol, type: TriangularType = .upper) throws -> [T]
+  where T: AccelerateFloatingPoint {
+    precondition(shape.r == shape.c, "Matrix must be symmetric")
+    var uplo = Int8(Character("U").asciiValue!)
+    var n = __CLPK_integer(shape.r)
+    var out = a
+    var lda = __CLPK_integer(shape.r)
+    var info = __CLPK_integer()
+    
+    if T.self is Double.Type {
+      _ = out.withUnsafeMutableBufferPointer(as: Double.self) { ptr in
+        dpotrf_(&uplo, &n, ptr.baseAddress!, &lda, &info)
+      }
+    } else {
+      _ = out.withUnsafeMutableBufferPointer(as: Float.self) { ptr in
+        spotrf_(&uplo, &n, ptr.baseAddress!, &lda, &info)
+      }
+    }
+    if info > 0 { throw BLASError.invalidMatrix("Matrix must be positive-definite") }
+    (out, _) = BLAS.triangle(out, shape, type: type)
+    return out
+  }
+
+  
 //  MARK: LU
   
-  public static func LU<T>(_ a: [T], _ shape: RowCol, output: LUOutput = .LU) -> (L: [T], U: [T], P: [T]?, Q: [T]?)
-  where T: AccelerateFloatingPoint {
-//    precondition(output != .LUPQ || shape.r == shape.c, "LUPQ output requires a square matrix")
+  public static func LU<T>(_ a: [T], _ shape: RowCol, output: LUOutput = .LU)
+    -> (L: ([T], RowCol), U: ([T], RowCol), P: [T]?, Q: [T]?) where T: AccelerateFloatingPoint {
     precondition(shape.r == shape.c, "Only square matrices are supported")
 
     var m = __CLPK_integer(shape.r)
@@ -32,68 +50,48 @@ extension BLAS {
     var ipiv = [__CLPK_integer](repeating: 0, count: Swift.min(shape.r,shape.c))
     var jpiv = [__CLPK_integer](repeating: 0, count: output == .LUPQ ? Swift.min(shape.r, shape.c) : 1)
     var info = __CLPK_integer()
+    var out = BLAS.transpose(a, shape)
     
     if T.self is Double.Type {
-      var out = BLAS.transpose(a, shape) as! [Double]
       if output != .LUPQ {
-        dgetrf_(&m, &n, &out, &lda, &ipiv, &info)
-        
-        var P: [Double] = makePermutationMatrix(ipiv)
-        var L = BLAS.add(BLAS.lowerTriangle(BLAS.transpose(out, shape), shape), BLAS.eye(shape.r))
-        let U = BLAS.upperTriangle(BLAS.transpose(out, shape), shape)
-
-        if output == .LU {
-          P = BLAS.transpose(P, shape)
-          (L, _) = BLAS.multiplyMatrix(P, shape, L, shape)
-          return (L: L as! [T], U: (U as! [T]), P: nil, Q: nil)
-        } else {
-          return (L: L as! [T], U: (U as! [T]), P: (P as! [T]), Q: nil)
+        _ = out.withUnsafeMutableBufferPointer(as: Double.self) { ptr in
+          dgetrf_(&m, &n, ptr.baseAddress!, &lda, &ipiv, &info)
         }
       } else {
-        dgetc2_(&n, &out, &lda, &ipiv, &jpiv, &info)
-        print(ipiv, jpiv)
-        print(info)
-        var P: [Double] = makePermutationMatrix(ipiv)
-        P = BLAS.transpose(P, shape)
-        let Q: [Double] = makePermutationMatrix(jpiv)
-        let L = BLAS.add(BLAS.lowerTriangle(BLAS.transpose(out, shape), shape), BLAS.eye(shape.r))
-        let U = BLAS.upperTriangle(BLAS.transpose(out, shape), shape)
-
-        return (L: L as! [T], U: (U as! [T]), P: (P as! [T]), Q: (Q as! [T]))
+        _ = out.withUnsafeMutableBufferPointer(as: Double.self) { ptr in
+          dgetc2_(&n, ptr.baseAddress!, &lda, &ipiv, &jpiv, &info)
+        }
       }
     } else {
-      var out = BLAS.transpose(a, shape) as! [Float]
       if output != .LUPQ {
-        sgetrf_(&m, &n, &out, &lda, &ipiv, &info)
-        
-        var P: [Float] = makePermutationMatrix(ipiv)
-        var L = BLAS.add(BLAS.lowerTriangle(BLAS.transpose(out, shape), shape), BLAS.eye(shape.r))
-        let U = BLAS.upperTriangle(BLAS.transpose(out, shape), shape)
-        
-        if output == .LU {
-          P = BLAS.transpose(P, shape)
-          (L, _) = BLAS.multiplyMatrix(P, shape, L, shape)
-          return (L: L as! [T], U: (U as! [T]), P: nil, Q: nil)
-        } else {
-          return (L: L as! [T], U: (U as! [T]), P: (P as! [T]), Q: nil)
+        _ = out.withUnsafeMutableBufferPointer(as: Float.self) { ptr in
+          sgetrf_(&m, &n, ptr.baseAddress!, &lda, &ipiv, &info)
         }
       } else {
-        sgetc2_(&n, &out, &lda, &ipiv, &jpiv, &info)
-        print(ipiv, jpiv)
-        print(info)
-        var P: [Float] = makePermutationMatrix(ipiv)
-        P = BLAS.transpose(P, shape)
-        let Q: [Float] = makePermutationMatrix(jpiv)
-        let L = BLAS.add(BLAS.lowerTriangle(BLAS.transpose(out, shape), shape), BLAS.eye(shape.r))
-        let U = BLAS.upperTriangle(BLAS.transpose(out, shape), shape)
-        
-        return (L: L as! [T], U: (U as! [T]), P: (P as! [T]), Q: (Q as! [T]))
+        _ = out.withUnsafeMutableBufferPointer(as: Float.self) { ptr in
+          sgetc2_(&n, ptr.baseAddress!, &lda, &ipiv, &jpiv, &info)
+        }
       }
+    }
+    var P: [T] = makePermutationMatrix(ipiv)
+    P = BLAS.transpose(P, shape)
+    var (L, shapeL) = BLAS.triangle(BLAS.transpose(out, shape), shape, type: .lower, diagonal: -1)
+    L = BLAS.add(L, BLAS.eye(shape.r))
+    let (U, shapeU) = BLAS.triangle(BLAS.transpose(out, shape), shape, type: .upper)
+
+    switch output {
+    case .LU:
+      (L, _) = BLAS.multiplyMatrix(P, shape, L, shape)
+      return (L: (L, shapeL), U: (U, shapeU), P: nil, Q: nil)
+    case .LUP:
+      return (L: (L, shapeL), U: (U, shapeU), P: P, Q: nil)
+    case .LUPQ:
+      let Q: [T] = makePermutationMatrix(jpiv)
+      return (L: (L, shapeL), U: (U, shapeU), P: P, Q: Q)
     }
   }
   
   static func makePermutationMatrix<T>(_ piv: [Int32]) -> [T] where T: AccelerateFloatingPoint {
-    print(piv)
     let piv = piv.map{ $0 - 1 }
     var swaps = Array(0..<piv.count)
     (0..<piv.count).forEach { i in

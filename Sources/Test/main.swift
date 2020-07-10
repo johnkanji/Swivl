@@ -12,62 +12,82 @@ import Accelerate
 import Swivl
 import BLAS
 
-//let v1 = Vector<Int32>([1,2,3,4])
-//print(v1 + v1)
-//print(v2 + v2)
 
+let nonPSD = MatrixXd([
+  [1, 1,  1,  1,  1],
+  [1, 2,  3,  4,  5],
+  [1, 3,  6, 10, 15],
+  [1, 4, 10, 20, 35],
+  [1, 5, 15, 35, 69]])
 
-//print(v2 + 3)
+print(try? nonPSD.chol())
+print(nonPSD.isDefinite)
 
-let M = MatrixXd(rows: [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-//  [9, 10, 11]
+let PSD = MatrixXd([
+  [1, 0, 1],
+  [0, 2, 0],
+  [1, 0, 3]
 ])
-print()
-var (L, U, P, Q) = M.LU(.LUPQ)
-//print(L)
-//print(U)
-print(P!*L*U*Q!)
+
+print(try? PSD.chol())
+print(PSD.isDefinite)
 
 exit(0)
+  
+var M = MatrixXd(rows: [
+  [7, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [9, 10, 11]
+])
+print("\n1")
 
-//var Ar = MatrixXf(flat: [4,3,6,3], shape: (2,2))
-print("A")
-let A = MatrixXd(rows: [
+//var (L, U, P, Q) = M.LU(.LUPQ)
+//print(P!*L*U*Q! == M)
+//(L, U, P, Q) = M.LU(.LUP)
+//print(P!*L*U == M)
+//(L, U, P, Q) = M.LU(.LU)
+//print(L*U == M)
+
+M = MatrixXd(rows: [
   [10, -7, 0],
   [-3,  2, 6],
   [ 5, -1, 5]
 ])
-//var Ac = MatrixXf(flat: [4,6,3,3], shape: (2,2))
-//
-  (L, U, _, _) = A.LU()
-print()
-//print(A)
-//print(L)
-//print(U)
-//print()
-//print(L*U)
+print("\n2")
+var (L, U, P, Q) = M.LU(.LUPQ)
+print(P!*L*U*Q! == M)
+(L, U, P, Q) = M.LU(.LUP)
+print(P!*L*U == M)
+(L, U, P, Q) = M.LU(.LU)
+print(L*U == M)
 
-print("M2")
-let M2 = MatrixXd(flat: [
+M = MatrixXd(flat: [
 1.0000,    0.5000,    0.3333,    0.2500,
 0.5000,    1.0000,    0.6667,    0.5000,
 0.3333,    0.6667,    1.0000,    0.7500,
 0.2500,    0.5000,    0.7500,    1.0000
 ], shape: (4,4))
-M2.LU()
-//let (v, _, _) = M2.eig()
-//print(v)
+print("\n3")
+(L, U, P, Q) = M.LU(.LUPQ)
+print(P!*L*U*Q! == M)
+(L, U, P, Q) = M.LU(.LUP)
+print(P!*L*U == M)
+(L, U, P, Q) = M.LU(.LU)
+print(L*U == M)
 
 
-let B = MatrixXd(flat: [
+M = MatrixXd(flat: [
   0.378589,   0.971711,   0.016087,   0.037668,   0.312398,
   0.756377,   0.345708,   0.922947,   0.846671,   0.856103,
   0.732510,   0.108942,   0.476969,   0.398254,   0.507045,
   0.162608,   0.227770,   0.533074,   0.807075,   0.180335,
   0.517006,   0.315992,   0.914848,   0.460825,   0.731980
 ], shape: (5,5))
-print("B")
-B.LU()
+print("\n4")
+(L, U, P, Q) = M.LU(.LUPQ)
+print(P!*L*U*Q! == M)
+(L, U, P, Q) = M.LU(.LUP)
+print(P!*L*U == M)
+(L, U, P, Q) = M.LU(.LU)
+print(L*U == M)

@@ -21,6 +21,7 @@ public enum BLAS {
   
   public enum BLASError: Error {
     case invalidType
+    case invalidMatrix(String)
   }
 }
 

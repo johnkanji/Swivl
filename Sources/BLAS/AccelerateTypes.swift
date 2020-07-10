@@ -9,41 +9,46 @@
 
 import Foundation
 
+//  MARK: ApproximatelyEquatable
+
+public protocol ApproximatelyEquatable: BinaryFloatingPoint where Stride == Self {
+  static var approximateEqualityTolerance: Self { get set }
+  
+  static func ==~ (lhs: Self, rhs: Self) -> Bool
+  static func !=~ (lhs: Self, rhs: Self) -> Bool
+}
+
+extension ApproximatelyEquatable {
+  public static func ==~ ( lhs: Self, rhs: Self) -> Bool {
+    return  lhs.distance(to: rhs).magnitude <= approximateEqualityTolerance
+  }
+  
+  public static func !=~ ( lhs: Self, rhs: Self) -> Bool {
+    return !( lhs ==~ rhs)
+  }
+}
+
+extension Double: ApproximatelyEquatable {
+  public static var approximateEqualityTolerance: Self = 1e-12
+}
+
+extension Float: ApproximatelyEquatable {
+  public static var approximateEqualityTolerance: Self = 1e-12
+}
+
+
+//  MARK: AccelerateNumeric
+
 public protocol AccelerateNumeric: SignedNumeric, Comparable {}
 
 extension Double: AccelerateNumeric {}
 extension Float: AccelerateNumeric {}
 extension Int32: AccelerateNumeric {}
 
-public protocol AccelerateFloatingPoint: BinaryFloatingPoint, AccelerateNumeric where Stride == Self {}
+
+//  MARK: AccelerateFloatingPoint
+
+public protocol AccelerateFloatingPoint: ApproximatelyEquatable, AccelerateNumeric {}
 
 extension Double: AccelerateFloatingPoint {}
 extension Float: AccelerateFloatingPoint {}
-
-public extension AccelerateFloatingPoint {
-  
-  static func ==~ ( lhs: Self, rhs: Self) -> Bool {
-    return  lhs.distance(to: rhs).magnitude <= Self.leastNormalMagnitude
-  }
-  
-  static func !=~ ( lhs: Self, rhs: Self) -> Bool {
-    return !( lhs ==~ rhs)
-  }
-  
-  static func <=~ ( lhs: Self, rhs: Self) -> Bool {
-    return  lhs ==~ rhs ||  lhs <~ rhs
-  }
-  
-  static func >=~ ( lhs: Self, rhs: Self) -> Bool {
-    return  lhs ==~ rhs ||  lhs >~ rhs
-  }
-  
-  static func <~ ( lhs: Self, rhs: Self) -> Bool {
-    return  lhs.distance(to: rhs) > Self.leastNormalMagnitude
-  }
-  
-  static func >~ ( lhs: Self, rhs: Self) -> Bool {
-    return  lhs.distance(to: rhs) < -Self.leastNormalMagnitude
-  }
-  
-}

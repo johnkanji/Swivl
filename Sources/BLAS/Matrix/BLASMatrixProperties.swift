@@ -18,10 +18,21 @@ extension BLAS {
     return BLAS.gather(a, diagi)
   }
   
-  public static func trace<T>(_ a: [T], shape: RowCol) -> T where T: AccelerateNumeric {
+  public static func trace<T>(_ a: [T], _ shape: RowCol) -> T where T: AccelerateNumeric {
     return diag(a, shape).reduce(0, *)
   }
   
-  
+  public static func det<T>(_ a: [T], _ shape: RowCol) -> T where T: AccelerateFloatingPoint {
+    precondition(shape.r == shape.c, "Only square matrices are supported")
+    
+    func detPerm(_ p: [T]) -> T {
+      let diagp = diag(p, shape)
+      let swaps = shape.r - Int(diagp.reduce(0, +));
+      return swaps % 2 == 0 ? 1 : -1
+    }
+    
+    let (_, (U, _) ,P, Q) = BLAS.LU(a, shape, output: .LUPQ)
+    return detPerm(P!) * detPerm(Q!) * diag(U, shape).reduce(1, *)
+  }
   
 }

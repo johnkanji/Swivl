@@ -172,19 +172,18 @@ public struct Matrix<T>: MatrixProtocol where T: AccelerateNumeric {
     false
   }
   
-  //  TODO: STUB
-  public var det: T {
-    0
-  }
-  
-  //  TODO: STUB
   public var trace: T {
-    0
+    BLAS.trace(_flat, shape)
   }
   
   //  TODO: STUB
   public var cond: T {
     0
+  }
+  
+  public func tri(_ type: BLAS.TriangularType, diagonal: Int = 0) -> Self where T: AccelerateFloatingPoint {
+    let (tri, shapeT) = BLAS.triangle(_flat, shape, type: type, diagonal: diagonal)
+    return Self(flat: tri, shape: shapeT)
   }
   
   
@@ -322,18 +321,22 @@ public struct Matrix<T>: MatrixProtocol where T: AccelerateNumeric {
   
 //  MARK: Decompositions
   
+  public func chol(_ type: BLAS.TriangularType = .upper) throws -> Self where T: AccelerateFloatingPoint {
+    return try Self(flat: BLAS.chol(_flat, shape, type: type), shape: shape)
+  }
+  
   public func LU(_ output: BLAS.LUOutput = .LU) -> (L: Self, U: Self, P: Self?, Q: Self?)
   where T: AccelerateFloatingPoint {
     switch output {
     case .LU:
-      let (L, U, _, _) = BLAS.LU(_flat, shape, output: output)
-      return (L: Self(flat: L, shape: shape), U: Self(flat: U, shape: shape), nil, nil)
+      let ((L, shapeL), (U, shapeU), _, _) = BLAS.LU(_flat, shape, output: output)
+      return (L: Self(flat: L, shape: shapeL), U: Self(flat: U, shape: shapeU), nil, nil)
     case .LUP:
-      let (L, U, P, _) = BLAS.LU(_flat, shape, output: output)
-      return (L: Self(flat: L, shape: shape), U: Self(flat: U, shape: shape), P: Self(flat: P!, shape: shape), nil)
+      let ((L, shapeL), (U, shapeU), P, _) = BLAS.LU(_flat, shape, output: output)
+      return (L: Self(flat: L, shape: shapeL), U: Self(flat: U, shape: shapeU), P: Self(flat: P!, shape: shape), nil)
     case .LUPQ:
-      let (L, U, P, Q) = BLAS.LU(_flat, shape, output: output)
-      return (L: Self(flat: L, shape: shape), U: Self(flat: U, shape: shape),
+      let ((L, shapeL), (U, shapeU), P, Q) = BLAS.LU(_flat, shape, output: output)
+      return (L: Self(flat: L, shape: shapeL), U: Self(flat: U, shape: shapeU),
               P: Self(flat: P!, shape: shape), Q: Self(flat: Q!, shape: shape))
     }
   }

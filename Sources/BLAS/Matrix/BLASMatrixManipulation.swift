@@ -189,24 +189,70 @@ extension BLAS {
     return vcat([a, b], shapes: [shapeA, shapeB])
   }
   
-  //  TODO: leading diagonal
-  public static func lowerTriangle<T>(_ a: [T], _ shape: RowCol, includeLeadingDiagonal: Bool = false) -> [T]
-  where T: AccelerateFloatingPoint {
-    precondition(shape.r == shape.c)
-    let S = Array(0..<shape.r).reduce([]) { (flat, i) -> [T] in
-      flat + [T](repeating: 1, count: i) + [T](repeating: 0, count: shape.r-i)
+  
+  static func triangularMask<T>(_ shape: RowCol, type: TriangularType, diagonal k: Int) -> [T]
+  where T: AccelerateNumeric {
+    var v1: T = 0
+    var v2: T = 1
+    var k = k
+    if type == .upper {
+      swap(&v1, &v2)
+      k -= 1
     }
-    return multiplyElementwise(a, S)
+    let zs = Array<Int>(Swift.max(-k,0)..<shape.r)
+      .map { r in Array<Int>(r*shape.c...r*shape.c + r + k) }
+      .reduce([], +)
+    var mask = [T](repeating: v1, count: shape.r*shape.c)
+    zs.forEach { i in mask[i] = v2 }
+    
+    return mask
   }
   
-  //  TODO: leading diagonal
-  public static func upperTriangle<T>(_ a: [T], _ shape: RowCol, includeLeadingDiagonal: Bool = true) -> [T]
-  where T: AccelerateFloatingPoint {
-    precondition(shape.r == shape.c)
-    let S = Array(0..<shape.r).reduce([]) { (flat, i) -> [T] in
-      flat + [T](repeating: 0, count: i) + [T](repeating: 1, count: shape.r-i)
-    }
-    return multiplyElementwise(a, S)
+  public enum TriangularType {
+    case upper
+    case lower
   }
+
+  public static func triangle<T>(
+    _ a: [T], _ shape: RowCol,
+    type: TriangularType, diagonal: Int = 0, truncate: Bool = false) -> ([T], shape: RowCol)
+  where T: AccelerateFloatingPoint {
+    
+    if !truncate {
+      let S: [T] = triangularMask(shape, type: type, diagonal: diagonal)
+      return (multiplyElementwise(a, S), shape)
+    } else {
+      
+      let k = type == .lower ? diagonal : -diagonal
+      let r = type == .lower ? shape.r : shape.c
+      let c = type == .lower ? shape.c : shape.r
+      var startIndex = RowCol(Swift.max(0,-k), 0)
+      var shapeOut = RowCol(Swift.min(r+k,r), Swift.min(r+k,c))
+      if type == .upper {
+        startIndex = RowCol(startIndex.c, startIndex.r)
+        shapeOut = RowCol(shapeOut.c, shapeOut.r)
+      }
+
+      var out: [T] = []
+      if shapeOut == shape {
+        out = a
+      } else {
+        out = block(a, shape, startIndex: startIndex, shapeOut: shapeOut)
+      }
+
+      let S: [T] = triangularMask(shapeOut, type: type, diagonal: type == .upper ? diagonal : diagonal+1)
+      return (multiplyElementwise(out, S), shapeOut)
+    }
+  }
+  
+//  //  TODO: leading diagonal
+//  public static func upperTriangle<T>(_ a: [T], _ shape: RowCol, includeLeadingDiagonal: Bool = true) -> [T]
+//  where T: AccelerateFloatingPoint {
+//    precondition(shape.r == shape.c)
+//    let S = Array(0..<shape.r).reduce([]) { (flat, i) -> [T] in
+//      flat + [T](repeating: 0, count: i) + [T](repeating: 1, count: shape.r-i)
+//    }
+//    return multiplyElementwise(a, S)
+//  }
   
 }
