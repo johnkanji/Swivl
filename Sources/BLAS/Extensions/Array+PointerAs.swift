@@ -10,6 +10,8 @@
 import Foundation
 
 internal extension Array {
+  
+  @discardableResult
   func withUnsafeBufferPointer<T, R>(as type: T.Type, _ body: (UnsafeBufferPointer<T>) throws -> R)
   rethrows -> R {
     try self.withUnsafeBufferPointer { ptr in
@@ -17,6 +19,7 @@ internal extension Array {
     }
   }
   
+  @discardableResult
   mutating func withUnsafeMutableBufferPointer<T, R>(
     as type: T.Type,
     _ body: (UnsafeMutableBufferPointer<T>) throws -> R
