@@ -71,8 +71,8 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
     _ rows: Int? = nil, _ cols: Int? = nil
   ) {
     precondition(rowIndices.count == values.count)
-    self._rows = rows ?? Int(rowIndices.max()!)
-    self._cols = cols ?? columnStarts.count
+    self._rows = rows ?? Int(rowIndices.max()! + 1)
+    self._cols = cols ?? (columnStarts.count - 1)
     self._values = values
     self._rowIndices = rowIndices
     self._columnStarts = columnStarts
@@ -113,11 +113,15 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
 //  MARK: Subscripts
 
   public subscript(position: Int) -> Scalar {
-    _read { yield 0 }
+    _read { yield _values[position] }
   }
 
   public subscript(row: Index, column: Index) -> Scalar {
-    get { 0 }
+    get {
+      let ris = _rowIndices[_columnStarts[column]..<_columnStarts[column + 1]]
+      guard let vi = ris.firstIndex(where: { $0 == Int32(row) }) else { return 0 }
+      return _values[vi]
+    }
     set {  }
   }
 
@@ -135,6 +139,11 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
     } else {
       return (Int(floor(d/Double(shape.r))), Int(d.truncatingRemainder(dividingBy: Double(shape.r))))
     }
+  }
+  func valueIndexToRowColumn(_ vi: Index) -> RowCol {
+    let r = _rowIndices[vi]
+    let c = _columnStarts.lastIndex(where: { c in c <= vi }) ?? 0
+    return (Int(r), c)
   }
 
   public func index(after i: Int) -> Int {
@@ -251,6 +260,18 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
 
   public static func eye(_ n: Int) -> SparseMatrix<Scalar> {
     Self(rowIndices: Array(0..<Int32(n)), columnStarts: Array(0...n), [Scalar](repeating: 1, count: n))
+  }
+
+
+//  MARK: Conversion
+
+  public func dense() -> Matrix<Scalar> {
+    var M = Matrix<Scalar>.zeros(Int(rows), cols)
+    _values.enumerated().forEach { vi, v in
+      let rc = self.valueIndexToRowColumn(vi)
+      M[rc.r, rc.c] = v
+    }
+    return M
   }
 
 }

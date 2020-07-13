@@ -14,9 +14,10 @@ let package = Package(
   ],
   targets: [
     .systemLibrary(name: "CLapacke", pkgConfig: "lapacke", providers: [.brew(["lapack"])]),
+    .systemLibrary(name: "SuperLU", providers: [.brew(["superlu"])]),
     .target(
       name: "BLAS",
-      dependencies: ["CLapacke"]),
+      dependencies: ["CLapacke", "SuperLU"]),
     .target(
       name: "Swiggl",
       dependencies: ["Swivl"]),

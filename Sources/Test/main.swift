@@ -51,10 +51,6 @@ let X = MatrixXd(flat: [
 ], shape: (3,3))
 print(X.rank)
 
-print(Int8(Character("F").asciiValue!))
-print(Int8(Character("O").asciiValue!))
-print(Int8(Character("I").asciiValue!))
-
 
 let M = MatrixXd([
   [0, 1, 0, 2, 0],
@@ -78,3 +74,4 @@ print(C)
 
 let D = SparseMatrix<Double>.eye(4)
 print(D)
+print(D.dense())

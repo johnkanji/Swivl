@@ -52,7 +52,7 @@ extension Matrix: CustomStringConvertible where Scalar: AccelerateNumeric {
     formatter.formatWidth = Int(log10(Double(truncating: Self.toNSNumber(flat.max()!)))) + 1
     return "\(type(of: self)) \(shape.r)x\(shape.c)\n" +
     (0..<rows).map { r in
-      "\t[" + BLAS.row(flat, shape, r).map { x in formatter.string(from: Self.toNSNumber(x))! }
+      "\t[ " + BLAS.row(flat, shape, r).map { x in formatter.string(from: Self.toNSNumber(x))! }
         .joined(separator: ", ") +
       " ]"
     }.joined(separator: "\n")
