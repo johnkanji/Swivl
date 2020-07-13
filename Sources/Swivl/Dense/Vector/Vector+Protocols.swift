@@ -21,6 +21,7 @@ extension Vector {
   
   public var rows: Int { layout == .rowMajor ? 1 : array.count }
   public var cols: Int { layout == .rowMajor ? array.count : 1 }
+  public var shape: RowCol { (rows, cols) }
   
   public var T: Self {
     switch layout {

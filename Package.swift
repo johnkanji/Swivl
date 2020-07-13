@@ -13,7 +13,10 @@ let package = Package(
     .library(name: "Swivl", targets: ["Swivl"])
   ],
   targets: [
-    .target(name: "BLAS"),
+    .systemLibrary(name: "CLapacke", pkgConfig: "lapacke", providers: [.brew(["lapack"])]),
+    .target(
+      name: "BLAS",
+      dependencies: ["CLapacke"]),
     .target(
       name: "Swiggl",
       dependencies: ["Swivl"]),
@@ -22,7 +25,8 @@ let package = Package(
       dependencies: ["BLAS"]),
     .target(
       name:"Test",
-      dependencies: ["Swiggl", "BLAS"]),
+      dependencies: ["Swiggl", "BLAS", "CLapacke"]),
+    
     .testTarget(
       name: "SwigglTests",
       dependencies: ["Swiggl"])

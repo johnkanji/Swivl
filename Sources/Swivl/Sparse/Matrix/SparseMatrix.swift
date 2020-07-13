@@ -78,6 +78,7 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
     self._columnStarts = columnStarts
   }
 
+//  TODO: Storage should be sorted for faster indexing
   public init(
     _ rowIndices: [Int], _ colIndices: [Int], _ values: [Scalar],
     _ rows: Int? = nil, _ cols: Int? = nil

@@ -32,6 +32,10 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
 
 //  MARK: Matrix Properties
 
+  public var isSquare: Bool {
+    rows == cols
+  }
+
   public var isSymmetric: Bool {
     self == self†
   }
@@ -158,6 +162,9 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
 
   public func diag<V>() -> V where V: VectorProtocol, V.T == Scalar {
     V(BLAS.diag(_flat, shape))
+  }
+  public func diag() -> Vector<Scalar> {
+    Vector(BLAS.diag(_flat, shape))
   }
 
   public func tri(_ triangle: TriangularType, diagonal: Int = 0) -> Self {

@@ -57,7 +57,8 @@ public enum BLASError: Error {
   case invalidType
   case invalidMatrix(String)
   case eigendecompositionFailure
-  case linearLeastSquaresFaliure
+  case linearLeastSquaresFailure
+  case singularMatrix
 }
 
 
@@ -66,6 +67,11 @@ public enum BLASError: Error {
 enum Transpose: Int8 {
   case trans = 84
   case noTrans = 78
+}
+
+enum Diagonal: Int8 {
+  case nonUnit = 84
+  case unit = 78
 }
 
 enum ComputeVectors: Int8 {
