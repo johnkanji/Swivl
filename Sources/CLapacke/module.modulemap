@@ -1,5 +1,4 @@
 module CLapacke {
-  header "shim.h"
   header "/usr/local/opt/lapack/include/lapacke.h"
   header "/usr/local/opt/lapack/include/lapacke_utils.h"
   link "lapacke"

@@ -23,3 +23,4 @@ public enum BLAS {
 }
 
 public typealias RowCol = (r: Int, c: Int)
+public typealias SpMat<T> = (v: [T], r: [Int32], c: [Int32])

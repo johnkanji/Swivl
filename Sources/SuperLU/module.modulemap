@@ -1,0 +1,5 @@
+module SuperLU {
+  header "/usr/local/include/superlu/slu_ddefs.h"
+  link "superlu"
+  export *
+}
