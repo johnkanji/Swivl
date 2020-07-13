@@ -18,9 +18,8 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
     BLAS.det(_flat, shape)
   }
 
-  //  TODO: STUB
   public var cond: Scalar {
-    0
+    (try? BLAS.cond(_flat, shape)) ?? Scalar.nan
   }
 
   public var rank: Int {
@@ -51,7 +50,7 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
 
 // TODO: STUB
   public func inv() -> Self {
-    return Self()
+    Self(flat: BLAS.inverse(_flat, shape), shape: shape)
   }
 
   // TODO: STUB
@@ -63,25 +62,15 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
   //  MARK: Arithmetic
   // Overrides
 
-  public static func .* (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func multiplyElements(_ lhs: Self, _ rhs: Self) -> Self {
     precondition(lhs.shape == rhs.shape)
     return Self(flat: BLAS.multiplyElementwise(lhs._flat, rhs._flat), shape: lhs.shape)
   }
-  public static func .* (_ lhs: Self, _ rhs: Element) -> Self {
+  public static func multiplyElements(_ lhs: Self, _ rhs: Element) -> Self {
     return Self(flat: BLAS.multiplyScalar(lhs._flat, rhs), shape: lhs.shape)
   }
-  public static func .* (_ lhs: Element, _ rhs: Self) -> Self {
-    return Self(flat: BLAS.multiplyScalar(rhs._flat, lhs), shape: rhs.shape)
-  }
-  public static func * (_ lhs: Self, _ rhs: Element) -> Self {
-    return Self(flat: BLAS.multiplyScalar(lhs._flat, rhs), shape: lhs.shape)
-  }
-  public static func * (_ lhs: Element, _ rhs: Self) -> Self {
-    return Self(flat: BLAS.multiplyScalar(rhs._flat, lhs), shape: rhs.shape)
-  }
 
-
-  public static func * (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func multiplyMatrix(_ lhs: Self, _ rhs: Self) -> Self {
     let (c, shapeC) = BLAS.multiplyMatrix(lhs._flat, lhs.shape, rhs._flat, rhs.shape)
     return Self(flat: c, shape: shapeC)
   }
@@ -129,8 +118,9 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
     return (Self(flat: L, shape: shape), Self(flat: D, shape: shape))
   }
 
-  public func QR(_ triangle: TriangularType) -> Self {
-    return Self()
+  public func QR() -> (Q: Self, R: Self) {
+    let (Q, R) = BLAS.QR(_flat, shape)
+    return (Self(flat: Q, shape: (rows, rows)), Self(flat: R, shape: shape))
   }
 
   public func eig<VR>(vectors: SingularVectorOutput = .none) -> (values: VR, leftVectors: Self?, rightVectors: Self?)

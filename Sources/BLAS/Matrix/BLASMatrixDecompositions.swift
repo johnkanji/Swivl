@@ -128,42 +128,42 @@ extension BLAS {
 //  MARK: QR
 
   public static func QR<T>(_ a: [T], _ shape: RowCol) -> (Q: [T], R: [T]) where T: AccelerateFloatingPoint {
-    var m = __CLPK_integer(shape.r)
+    var m1 = __CLPK_integer(shape.r)
+    var m2 = __CLPK_integer(shape.r)
     var n = __CLPK_integer(shape.c)
+    var k = __CLPK_integer(shape.c)
     var lda = __CLPK_integer(shape.r)
-    var lwork = __CLPK_integer(2*shape.r*shape.c)
-    var jpvt = [Int32](repeating: 0, count: shape.c)
+    var lwork = __CLPK_integer(100*shape.c)
     var info = __CLPK_integer()
+    var out = transpose(a, shape)
+    var tau = [T](repeating: 0, count: Swift.min(shape.r, shape.c))
+    var work = [T](repeating: 0, count: Int(lwork))
 
     if T.self is Double.Type {
-      var out = transpose(a as! [Double], shape)
-      var tau = [Double](repeating: 0, count: Swift.min(shape.r, shape.c))
-      var work = [Double](repeating: 0, count: 2*shape.r*shape.c)
-      Accelerate.dgeqp3_(&m, &n, &out, &lda, &jpvt, &tau, &work, &lwork, &info)
-      return process_QR_output(out as! [T], shape, jpvt, tau as! [T])
+      out.withUnsafeMutableBufferPointer(as: Double.self) { pO in
+      tau.withUnsafeMutableBufferPointer(as: Double.self) { pT in
+      work.withUnsafeMutableBufferPointer(as: Double.self) { pW in
+        Accelerate.dgeqrf_(&m1, &n, pO.baseAddress!, &lda, pT.baseAddress!, pW.baseAddress!, &lwork, &info)
+        Accelerate.dorgqr_(&m1, &m2, &k, pO.baseAddress!, &lda, pT.baseAddress!, pW.baseAddress!, &lwork, &info)
+      }}}
     } else {
-      var out = transpose(a as! [Float], shape)
-      var tau = [Float](repeating: 0, count: Swift.min(shape.r, shape.c))
-      var work = [Float](repeating: 0, count: 2*shape.r*shape.c)
-      Accelerate.sgeqp3_(&m, &n, &out, &lda, &jpvt, &tau, &work, &lwork, &info)
-      return process_QR_output(out as! [T], shape, jpvt, tau as! [T])
+      out.withUnsafeMutableBufferPointer(as: Float.self) { pO in
+      tau.withUnsafeMutableBufferPointer(as: Float.self) { pT in
+      work.withUnsafeMutableBufferPointer(as: Float.self) { pW in
+        Accelerate.sgeqrf_(&m1, &n, pO.baseAddress!, &lda, pT.baseAddress!, pW.baseAddress!, &lwork, &info)
+        Accelerate.sorgqr_(&m1, &m2, &k, pO.baseAddress!, &lda, pT.baseAddress!, pW.baseAddress!, &lwork, &info)
+      }}}
     }
-  }
-
-  static func process_QR_output<T>(_ a: [T], _ shapeA: RowCol, _ jpvt: [Int32], _ tau: [T]) -> (Q: [T], R: [T])
-  where T: AccelerateFloatingPoint {
-    let a = transpose(a, shapeA)
-    let (R, _) = triangle(a, shapeA, .upper)
-    //  TODO: Parse output
-//    let Q = []
-
-    return ([], R)
+    out = transpose(out, (shape.c, shape.r))
+    let Q = block(out, shape, startIndex: (0,0), shapeOut: (shape.r, shape.r))
+    let (R, _) = triangle(out, shape, .upper)
+    return (Q, R)
   }
 
   
 //  MARK: Eigen
   
-  public static func eig<T> (
+  public static func eig<T>(
     _ a: [T], _ shape: RowCol, vectors: SingularVectorOutput = .none
   ) throws -> (values: [T], leftVectors: [T]?, rightVectors: [T]?) where T: AccelerateFloatingPoint {
     precondition(shape.r == shape.c)
@@ -206,8 +206,9 @@ extension BLAS {
 
 //  MARK: SVD
   //  TODO: STUB
-  public static func SVD<T>(_ a: [T], _ shape: RowCol) -> (Q: [T], R: [T]) where T: AccelerateFloatingPoint {
-    return ([],[])
+  public static func SVD<T>(_ a: [T], _ shape: RowCol, vectors: SingularVectorOutput = .none)
+  throws -> (values: [T], leftVectors: [T]?, rightVectors: [T]?) where T: AccelerateFloatingPoint {
+    return ([], nil, nil)
   }
   
   

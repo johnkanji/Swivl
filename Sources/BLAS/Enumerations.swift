@@ -50,6 +50,14 @@ public enum SingularVectorOutput {
 }
 
 
+public enum MatrixNorm: Int8 {
+  case frobenius = 70 //  "F"
+  case l1 = 79 //  "O"
+  case l2
+  case infinity = 73 //  "I"
+}
+
+
 public typealias RoundingMode = vDSP.RoundingMode
 
 
