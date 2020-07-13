@@ -13,4 +13,8 @@ extension Array where Element: AdditiveArithmetic {
   func sum() -> Element {
     self.reduce(Element.zero, +)
   }
+
+  func cumsum() -> Self {
+    self.reduce([Element.zero]) { acc, v in acc + [acc.last! + v] }
+  }
 }

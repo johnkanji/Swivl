@@ -11,83 +11,66 @@ import Foundation
 import Accelerate
 import Swivl
 import BLAS
+import CLapacke
+
+var attributes = SparseAttributes_t()
+attributes.triangle = SparseLowerTriangle
+attributes.kind = SparseSymmetric
+
+// Symmetric
+//var row: [Int32] =      [ 0,   1,   3,    1,    2,   3,   2,   3]
+//var column: [Int32] =   [ 0,   0,   0,    1,    1,   1,   2,   3]
+//var values =            [10.0, 1.0, 2.5, 12.0, -0.3, 1.1, 9.5, 6.0]
+
+// M = [  10    1    0 2.5 ]
+//     [   1   12 -0.3 1.1 ]
+//     [   0 -0.3  9.5   0 ]
+//     [ 2.5  1.1    0   6 ]
+
+//var row: [Int32] = [0, 1, 3, 0, 1, 2, 3, 1, 2, 0, 1, 3]
+//var column: [Int32] = [0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 3]
+//var values: [Double] = [10, 1, 2.5, 1, 12, -0.3, 1.1, -0.3, 9.5, 2.5, 1.1, 6.0]
+
+// rowIndices = [
+//   0, 1, 3,
+//   0, 1, 2, 3,
+//   1, 2,
+//   0, 1, 3
+// ]
+// columnStarts = [0, 3, 7, 9, 12]
 
 
-let nonPSD = MatrixXd([
-  [1, 1,  1,  1,  1],
-  [1, 2,  3,  4,  5],
-  [1, 3,  6, 10, 15],
-  [1, 4, 10, 20, 35],
-  [1, 5, 15, 35, 69]])
+//let M = SparseMatrix(row, column, values)
+//print(M)
 
-print(try? nonPSD.chol())
-print(nonPSD.isDefinite)
 
-let PSD = MatrixXd([
-  [1, 0, 1],
-  [0, 2, 0],
-  [1, 0, 3]
+let X = MatrixXd(flat: [
+  3, 2, -1,
+  2, -3, -5,
+  -1, -4, -3
+], shape: (3,3))
+print(X.rank)
+
+
+let M = MatrixXd([
+  [0, 1, 0, 2, 0],
+  [0, 5, 0, 0, 7],
+  [8, 9, 0, 4, 0]
 ])
 
-print(try? PSD.chol())
-print(PSD.isDefinite)
 
-exit(0)
-  
-var M = MatrixXd(rows: [
-  [7, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [9, 10, 11]
-])
-print("\n1")
+let rows: [Int] = [0, 0, 1, 1, 2, 2, 2]
+let cols: [Int] = [1, 3, 1, 4, 0, 1, 3]
+let vals: [Double] = [1, 2, 5, 7, 8, 9, 4]
 
-//var (L, U, P, Q) = M.LU(.LUPQ)
-//print(P!*L*U*Q! == M)
-//(L, U, P, Q) = M.LU(.LUP)
-//print(P!*L*U == M)
-//(L, U, P, Q) = M.LU(.LU)
-//print(L*U == M)
+let A = SparseMatrix(rows, cols, vals)
+print(A)
 
-M = MatrixXd(rows: [
-  [10, -7, 0],
-  [-3,  2, 6],
-  [ 5, -1, 5]
-])
-print("\n2")
-var (L, U, P, Q) = M.LU(.LUPQ)
-print(P!*L*U*Q! == M)
-(L, U, P, Q) = M.LU(.LUP)
-print(P!*L*U == M)
-(L, U, P, Q) = M.LU(.LU)
-print(L*U == M)
+let B = SparseMatrix(M)
+print(B)
 
-M = MatrixXd(flat: [
-1.0000,    0.5000,    0.3333,    0.2500,
-0.5000,    1.0000,    0.6667,    0.5000,
-0.3333,    0.6667,    1.0000,    0.7500,
-0.2500,    0.5000,    0.7500,    1.0000
-], shape: (4,4))
-print("\n3")
-(L, U, P, Q) = M.LU(.LUPQ)
-print(P!*L*U*Q! == M)
-(L, U, P, Q) = M.LU(.LUP)
-print(P!*L*U == M)
-(L, U, P, Q) = M.LU(.LU)
-print(L*U == M)
+let C = SparseMatrix<Double>(.eye(4))
+print(C)
 
-
-M = MatrixXd(flat: [
-  0.378589,   0.971711,   0.016087,   0.037668,   0.312398,
-  0.756377,   0.345708,   0.922947,   0.846671,   0.856103,
-  0.732510,   0.108942,   0.476969,   0.398254,   0.507045,
-  0.162608,   0.227770,   0.533074,   0.807075,   0.180335,
-  0.517006,   0.315992,   0.914848,   0.460825,   0.731980
-], shape: (5,5))
-print("\n4")
-(L, U, P, Q) = M.LU(.LUPQ)
-print(P!*L*U*Q! == M)
-(L, U, P, Q) = M.LU(.LUP)
-print(P!*L*U == M)
-(L, U, P, Q) = M.LU(.LU)
-print(L*U == M)
+let D = SparseMatrix<Double>.eye(4)
+print(D)

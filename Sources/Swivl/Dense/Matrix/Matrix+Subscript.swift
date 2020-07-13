@@ -11,75 +11,73 @@ import Foundation
 import BLAS
 
 extension Matrix {
+  //  TODO: Subscript assignments
   
 // Index Type combinations and selection strategies:
-//
 //    row/col      |   Index   |   [Index]   |   Range   | UnboundedRange
 //-----------------|-----------|-------------|-----------|----------------
 //  Index          | subscript | gather      | block     | row/col
 //  [Index]        | gather    | gather      | cat block | cat row/col
 //  Range          | block     | cat block   | block     | block
 //  UnboundedRange | row/col   | cat row/col | block     | all
-  
-
-//  Index/Index
-//  Implemented in Matrix.swift
+//  
+//  Index/Index implemented in Matrix.swift
   
   
-//  Index/[Index]
-  public subscript(_ rows: Index, _ cols: [Index]) -> Vector<T> {
+//  MARK: Index/[Index]
+  public subscript(_ rows: Index, _ cols: [Index]) -> Vector<Scalar> {
     let indices = cols.map { c in (rows, c) }.map(self.rowColumnToFlatIndex)
     return Vector(BLAS.gather(flat, indices), shape: (1, cols.count))
   }
-  public subscript(_ rows: [Index], _ cols: Index) -> Vector<T> {
+  public subscript(_ rows: [Index], _ cols: Index) -> Vector<Scalar> {
     let indices = rows.map { r in (cols, r) }.map(self.rowColumnToFlatIndex)
     return Vector(BLAS.gather(flat, indices), shape: (rows.count, 1))
   }
   
   
-//  Index/Range
-  private func rowBlock<R>(_ rows: R, _ cols: Index) -> [T] where R: RangeExpression {
+//  MARK: Index/Range
+  private func rowBlock<R>(_ rows: R, _ cols: Index) -> [Scalar] where R: RangeExpression {
     let range = indexRange(rows, for: .row)
     precondition(range.upperBound < self.rows, "Index out of range")
     let shapeOut = RowCol((range.upperBound - range.lowerBound) + 1, 1)
     return BLAS.block(flat, shape, startIndex: (range.lowerBound, cols), shapeOut: shapeOut)
   }
-  private func colBlock<R>(_ rows: Index, _ cols: R) -> [T] where R: RangeExpression {
+  private func colBlock<R>(_ rows: Index, _ cols: R) -> [Scalar] where R: RangeExpression {
     let range = indexRange(cols, for: .col)
     precondition(range.upperBound < self.cols, "Index out of range")
     let shapeOut = RowCol(1, (range.upperBound - range.lowerBound) + 1)
     return BLAS.block(flat, shape, startIndex: (rows, range.lowerBound), shapeOut: shapeOut)
   }
   
-  public subscript<R>(_ rows: Index, _ cols: R) -> Vector<T>
+  public subscript<R>(_ rows: Index, _ cols: R) -> Vector<Scalar>
   where R: RangeExpression {
     let blk = colBlock(rows, cols)
     return Vector(blk, shape: (blk.count, 1))
   }
-  public subscript<R>(_ rows: R, _ cols: Index) -> Vector<T>
+  public subscript<R>(_ rows: R, _ cols: Index) -> Vector<Scalar>
   where R: RangeExpression {
     let blk = rowBlock(rows, cols)
     return Vector(blk, shape: (1, blk.count))
   }
   
   
-//  Index/...
-  public subscript(_ rows: Index, _ cols: UnboundedRange) -> Vector<T> {
+//  MARK: Index/...
+  public subscript(_ rows: Index, _ cols: UnboundedRange) -> Vector<Scalar> {
     Vector(BLAS.row(flat, shape, rows), shape: (1, self.cols))
   }
-  public subscript(_ rows: UnboundedRange, _ cols: Index) -> Vector<T> {
+  public subscript(_ rows: UnboundedRange, _ cols: Index) -> Vector<Scalar> {
     Vector(BLAS.col(flat, shape, cols), shape: (self.rows, 1))
   }
   
   
-// [Index]/[Index]
+// MARK: [Index]/[Index]
   public subscript(_ rows: [Index], _ cols: [Index]) -> Self {
     let indices = rows.map { r in cols.map { c in RowCol(r, c) } }.reduce([], +).map(rowColumnToFlatIndex)
     return Self(flat: BLAS.gather(flat, indices), shape: (rows.count, cols.count))
   }
   
   
-//  [Index]/Range
+//  MARK: [Index]/Range
   public subscript<R>(_ rows: [Index], _ cols: R) -> Self where R: RangeExpression {
     let vs = rows.map { r in colBlock(r, cols) }
     let shapes = [RowCol](repeating: RowCol(1, vs[0].count), count: vs.count)
@@ -92,7 +90,7 @@ extension Matrix {
   }
   
   
-//  [Index]/...
+//  MARK: [Index]/...
   public subscript(_ rows: [Index], _ cols: UnboundedRange) -> Self {
     let v = BLAS.vcat(
       rows.map { r in BLAS.row(flat, shape, r) },
@@ -107,7 +105,7 @@ extension Matrix {
   }
   
   
-//  Range/Range
+//  MARK: Range/Range
   public subscript<R1, R2>(_ rows: R1, _ cols: R2) -> Self
   where R1: RangeExpression, R2: RangeExpression {
     let r1 = indexRange(rows, for: .row)
@@ -119,7 +117,7 @@ extension Matrix {
   }
   
   
-//  Range/...
+//  MARK: Range/...
   public subscript<R>(_ rows: R, _ cols: UnboundedRange) -> Self where R: RangeExpression {
     let r = indexRange(rows, for: .row)
     precondition(r.upperBound < self.rows, "Index out of range")
@@ -134,13 +132,13 @@ extension Matrix {
   }
   
   
-//  .../...
+//  MARK: .../...
   public subscript(_ rows: UnboundedRange, _ cols: UnboundedRange) -> Self {
     Self(flat: flat, shape: shape)
   }
 
   
-  private func indexRange<R>(_ range: R, for d: Dim) -> ClosedRange<Index> where R: RangeExpression {
+  private func indexRange<R>(_ range: R, for d: MatrixDimension) -> ClosedRange<Index> where R: RangeExpression {
     if R.self is ClosedRange<Index>.Type {
       return range as! ClosedRange<Index>
     } else if R.self is Range<Index>.Type {

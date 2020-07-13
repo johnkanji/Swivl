@@ -8,45 +8,35 @@
 //
 
 import Foundation
-import Accelerate
+import CLapacke
 
 extension BLAS {
   
-  //  TODO: STUB
   public static func linearLeastSquares<T>(_ a: [T], shapeA: RowCol, _ b: [T], _ shapeB: RowCol) -> [T]
   where T: AccelerateFloatingPoint {
-    var trans = Int8(Character("N").asciiValue!)
-    var m = __CLPK_integer(shapeA.r)
-    var n = __CLPK_integer(shapeA.c)
-    var nrhs = __CLPK_integer(shapeB.c)
-    var A = BLAS.transpose(a, shapeA)
-    var lda = __CLPK_integer(shapeA.c)
-    var B = BLAS.transpose(b, shapeB)
-    var ldb = __CLPK_integer(shapeB.c)
-    var work = [T](repeating: 0, count: 4*shapeA.r*shapeA.c)
-    var lwork = __CLPK_integer(4*shapeA.r*shapeA.c)
-    var info = __CLPK_integer()
+    let trans = Transpose.noTrans.rawValue
+    let m = Int32(shapeA.r)
+    let n = Int32(shapeA.c)
+    let nrhs = Int32(shapeB.c)
+    var A = a
+    var B = b
+    var info = Int32()
     
     if T.self is Double.Type {
       A.withUnsafeMutableBufferPointer(as: Double.self) { ptrA in
         B.withUnsafeMutableBufferPointer(as: Double.self) { ptrB in
-          work.withUnsafeMutableBufferPointer(as: Double.self) { ptrW in
-            dgels_(&trans, &m, &n, &nrhs, ptrA.baseAddress!, &lda, ptrB.baseAddress!, &ldb, ptrW.baseAddress!, &lwork, &info)
-          }
+          info = LAPACKE_dgels(rowMajor, trans, m, n, nrhs, ptrA.baseAddress!, n, ptrB.baseAddress!, nrhs)
         }
       }
     } else {
       A.withUnsafeMutableBufferPointer(as: Float.self) { ptrA in
         B.withUnsafeMutableBufferPointer(as: Float.self) { ptrB in
-          work.withUnsafeMutableBufferPointer(as: Float.self) { ptrW in
-            sgels_(&trans, &m, &n, &nrhs, ptrA.baseAddress!, &lda, ptrB.baseAddress!, &ldb, ptrW.baseAddress!, &lwork, &info)
-          }
+          info = LAPACKE_sgels(rowMajor, trans, m, n, nrhs, ptrA.baseAddress!, n, ptrB.baseAddress!, nrhs)
         }
       }
     }
     assert(info == 0, "Matrix must be full rank")
     
-    B = transpose(B, (shapeB.c, shapeB.r))
     if m > n {
       B = block(B, shapeB, startIndex: (0,0), shapeOut: (shapeA.c, shapeB.c))
     }
@@ -56,41 +46,42 @@ extension BLAS {
   
   public static func linearLeastSquares<T>(
     _ a: [T], shapeA: RowCol, _ b: [T], _ c: [T], shapeC: RowCol, _ d: [T]
-  ) -> [T] where T: AccelerateFloatingPoint {
-    var m = __CLPK_integer(shapeA.r)
-    var n = __CLPK_integer(shapeA.c)
-    var p = __CLPK_integer(shapeC.r)
-    var A = BLAS.transpose(a, shapeA)
-    var lda = __CLPK_integer(shapeA.r)
+  ) throws -> [T] where T: AccelerateFloatingPoint {
+    let m = Int32(shapeA.r)
+    let n = Int32(shapeA.c)
+    let p = Int32(shapeC.r)
+    var A = a
     var B = b
-    var C = BLAS.transpose(c, shapeC)
-    var ldc = __CLPK_integer(shapeC.r)
+    var C = c
     var D = d
-    var W = [T](repeating: 0, count: 4*shapeA.r*shapeA.c)
-    var lw = __CLPK_integer(4*shapeA.r*shapeA.c)
-    var info = __CLPK_integer()
+    let lda = n
+    let ldc = Int32(shapeC.c)
+    var info = Int32()
+
     var X = [T](repeating: 0, count: shapeA.c)
-    
     if T.self is Double.Type {
       A.withUnsafeMutableBufferPointer(as: Double.self) { pA in
       B.withUnsafeMutableBufferPointer(as: Double.self) { pB in
       C.withUnsafeMutableBufferPointer(as: Double.self) { pC in
       D.withUnsafeMutableBufferPointer(as: Double.self) { pD in
       X.withUnsafeMutableBufferPointer(as: Double.self) { pX in
-      W.withUnsafeMutableBufferPointer(as: Double.self) { pW in
-        dgglse_(&m, &n, &p, pA.baseAddress!, &lda, pC.baseAddress!, &ldc,
-                pB.baseAddress!, pD.baseAddress!, pX.baseAddress!, pW.baseAddress!, &lw, &info)
-      }}}}}}
+        info = LAPACKE_dgglse(
+          rowMajor, m, n, p, pA.baseAddress!, lda, pC.baseAddress!, ldc,
+          pB.baseAddress!, pD.baseAddress!, pX.baseAddress!)
+      }}}}}
     } else {
       A.withUnsafeMutableBufferPointer(as: Float.self) { pA in
       B.withUnsafeMutableBufferPointer(as: Float.self) { pB in
       C.withUnsafeMutableBufferPointer(as: Float.self) { pC in
       D.withUnsafeMutableBufferPointer(as: Float.self) { pD in
       X.withUnsafeMutableBufferPointer(as: Float.self) { pX in
-      W.withUnsafeMutableBufferPointer(as: Float.self) { pW in
-        sgglse_(&m, &n, &p, pA.baseAddress!, &lda, pC.baseAddress!, &ldc,
-                pB.baseAddress!, pD.baseAddress!, pX.baseAddress!, pW.baseAddress!, &lw, &info)
-      }}}}}}
+        info = LAPACKE_sgglse(
+          rowMajor, m, n, p, pA.baseAddress!, lda, pC.baseAddress!, ldc,
+          pB.baseAddress!, pD.baseAddress!, pX.baseAddress!)
+      }}}}}
+    }
+    if info > 0 {
+      throw BLASError.linearLeastSquaresFaliure
     }
     return X
   }

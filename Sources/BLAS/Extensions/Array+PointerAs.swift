@@ -9,7 +9,7 @@
 
 import Foundation
 
-internal extension Array {
+public extension Array {
   
   @discardableResult
   func withUnsafeBufferPointer<T, R>(as type: T.Type, _ body: (UnsafeBufferPointer<T>) throws -> R)

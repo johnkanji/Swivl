@@ -8,7 +8,6 @@
 //
 
 import Foundation
-import Accelerate
 import BLAS
 
 extension Matrix: Equatable {
@@ -18,21 +17,19 @@ extension Matrix: Equatable {
     lhs.shape == rhs.shape &&
     lhs.flat == rhs.flat
   }
-  public static func == (lhs: Self, rhs: Self) -> Bool where T: AccelerateFloatingPoint {
+  public static func == (lhs: Self, rhs: Self) -> Bool where Scalar: AccelerateFloatingPoint {
     lhs.layout == rhs.layout &&
     lhs.shape == rhs.shape &&
     zip(lhs._flat, rhs._flat).allSatisfy { $0 ==~ $1 }
   }
   
   public static func != (lhs: Self, rhs: Self) -> Bool {
-    lhs.layout != rhs.layout ||
-    lhs.shape != rhs.shape ||
-    lhs.flat != rhs.flat
+    !(lhs == rhs)
   }
   
 }
 
-extension Matrix: CustomStringConvertible where T: AccelerateNumeric {
+extension Matrix: CustomStringConvertible where Scalar: AccelerateNumeric {
   var formatter: NumberFormatter {
     let numberFormatter = NumberFormatter()
     numberFormatter.usesSignificantDigits = true
@@ -63,9 +60,9 @@ extension Matrix: CustomStringConvertible where T: AccelerateNumeric {
 }
 
 extension Matrix: ExpressibleByArrayLiteral {
-  public typealias ArrayLiteralElement = Matrix
+  public typealias ArrayLiteralElement = Self
 
-  public init(arrayLiteral elements: Matrix<T>...) {
+  public init(arrayLiteral elements: Self...) {
     let shapes = elements.map(\.shape)
     let ms = elements.map(\.flat)
     self._flat = BLAS.hcat(ms, shapes: shapes)
@@ -74,12 +71,3 @@ extension Matrix: ExpressibleByArrayLiteral {
   }
 }
 
-extension Matrix: AccelerateMutableBuffer {
-  public func withUnsafeBufferPointer<R>(_ body: (UnsafeBufferPointer<T>) throws -> R) rethrows -> R {
-    try flat.withUnsafeBufferPointer(body)
-  }
-  
-  public mutating func withUnsafeMutableBufferPointer<R>(_ body: (inout UnsafeMutableBufferPointer<T>) throws -> R) rethrows -> R {
-    try _flat.withUnsafeMutableBufferPointer(body)
-  }
-}

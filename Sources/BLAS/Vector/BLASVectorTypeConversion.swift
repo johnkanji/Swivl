@@ -12,8 +12,8 @@ import Accelerate
 
 extension BLAS {
   
-  public static func toInteger<T>(_ a: [T], roundingMode: vDSP.RoundingMode = .towardNearestInteger) -> [Int32]
-  where T: AccelerateFloatingPoint {
+  public static func toInteger<T>(_ a: [T], roundingMode: RoundingMode = .towardNearestInteger) -> [Int32]
+  where T: AccelerateNumeric {
     if T.self is Double.Type {
       return vDSP.floatingPointToInteger(a as! [Double], integerType: Int32.self, rounding: roundingMode)
     } else {
@@ -42,6 +42,17 @@ extension BLAS {
     } else {
       vDSP.convertElements(of: a as! [Int32], to: &c)
       return c
+    }
+  }
+
+  public static func toType<T, U>(_ a: [T], _ type: U.Type) -> [U]
+  where T: AccelerateNumeric, U: AccelerateNumeric {
+    if U.self is Double.Type {
+      return toDouble(a) as! [U]
+    } else if U.self is Double.Type {
+      return toFloat(a) as! [U]
+    } else {
+      return toInteger(a) as! [U]
     }
   }
   

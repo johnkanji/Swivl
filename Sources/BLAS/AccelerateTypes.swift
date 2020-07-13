@@ -48,7 +48,13 @@ extension Int32: AccelerateNumeric {}
 
 //  MARK: AccelerateFloatingPoint
 
-public protocol AccelerateFloatingPoint: ApproximatelyEquatable, AccelerateNumeric {}
+public protocol AccelerateFloatingPoint: ApproximatelyEquatable, AccelerateNumeric {
+
+  static func random(in: Range<Self>) -> Self
+
+  static func random(in: ClosedRange<Self>) -> Self
+
+}
 
 extension Double: AccelerateFloatingPoint {}
 extension Float: AccelerateFloatingPoint {}

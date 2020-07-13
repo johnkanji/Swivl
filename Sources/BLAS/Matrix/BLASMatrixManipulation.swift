@@ -9,14 +9,15 @@
 
 import Foundation
 import Accelerate
+import CLapacke
 
 extension BLAS {
   
-  public static func transpose<T>(_ a: [T], _ shapeA: RowCol) -> [T] where T: AccelerateNumeric {
+  public static func transpose<T>(_ a: [T], _ shape: RowCol) -> [T] where T: AccelerateNumeric {
     precondition(memoryCompatible(Double.self, T.self) || memoryCompatible(Float.self, T.self))
 
-    let m = vDSP_Length(shapeA.c)
-    let n = vDSP_Length(shapeA.r)
+    let m = vDSP_Length(shape.r)
+    let n = vDSP_Length(shape.c)
     var c = [T](repeating: 0, count: a.count)
 
     if memoryCompatible(Double.self, T.self) {
@@ -25,15 +26,14 @@ extension BLAS {
           vDSP_mtransD(ptrA.baseAddress!, s1, ptrC.baseAddress!, s1, m, n)
         }
       }
-      return c
     } else {
       c.withUnsafeMutableBufferPointer(as: Float.self) { ptrC in
         a.withUnsafeBufferPointer(as: Float.self) { ptrA in
           vDSP_mtrans(ptrA.baseAddress!, s1, ptrC.baseAddress!, s1, m, n)
         }
       }
-      return c
     }
+    return c
   }
 
   
@@ -190,45 +190,36 @@ extension BLAS {
   }
   
   
-  static func triangularMask<T>(_ shape: RowCol, type: TriangularType, diagonal k: Int) -> [T]
-  where T: AccelerateNumeric {
-    var v1: T = 0
-    var v2: T = 1
+  static func triangularMask(_ shape: RowCol, tri: TriangularType, diagonal k: Int) -> [Int] {
     var k = k
-    if type == .upper {
-      swap(&v1, &v2)
-      k -= 1
-    }
+    if tri == .upper { k -= 1 }
     let zs = Array<Int>(Swift.max(-k,0)..<shape.r)
       .map { r in Array<Int>(r*shape.c...r*shape.c + r + k) }
       .reduce([], +)
-    var mask = [T](repeating: v1, count: shape.r*shape.c)
-    zs.forEach { i in mask[i] = v2 }
-    
-    return mask
+    return zs
   }
   
-  public enum TriangularType {
-    case upper
-    case lower
+  public static func zeroed<T>(_ a: inout [T], _ iis: [Int]) where T: AccelerateNumeric {
+    iis.forEach { i in a[i] = 0 }
   }
 
   public static func triangle<T>(
-    _ a: [T], _ shape: RowCol,
-    type: TriangularType, diagonal: Int = 0, truncate: Bool = false) -> ([T], shape: RowCol)
-  where T: AccelerateFloatingPoint {
+    _ a: [T], _ shape: RowCol, _ tri: TriangularType, diagonal: Int = 0, truncate: Bool = false
+  ) -> ([T], shape: RowCol)
+  where T: AccelerateNumeric {
     
     if !truncate {
-      let S: [T] = triangularMask(shape, type: type, diagonal: diagonal)
-      return (multiplyElementwise(a, S), shape)
+      var out = a
+      zeroed(&out, triangularMask(shape, tri: tri, diagonal: diagonal))
+      return (out, shape)
     } else {
       
-      let k = type == .lower ? diagonal : -diagonal
-      let r = type == .lower ? shape.r : shape.c
-      let c = type == .lower ? shape.c : shape.r
+      let k = tri == .lower ? diagonal : -diagonal
+      let r = tri == .lower ? shape.r : shape.c
+      let c = tri == .lower ? shape.c : shape.r
       var startIndex = RowCol(Swift.max(0,-k), 0)
       var shapeOut = RowCol(Swift.min(r+k,r), Swift.min(r+k,c))
-      if type == .upper {
+      if tri == .upper {
         startIndex = RowCol(startIndex.c, startIndex.r)
         shapeOut = RowCol(shapeOut.c, shapeOut.r)
       }
@@ -240,8 +231,9 @@ extension BLAS {
         out = block(a, shape, startIndex: startIndex, shapeOut: shapeOut)
       }
 
-      let S: [T] = triangularMask(shapeOut, type: type, diagonal: type == .upper ? diagonal : diagonal+1)
-      return (multiplyElementwise(out, S), shapeOut)
+      let S = triangularMask(shapeOut, tri: tri, diagonal: tri == .upper ? diagonal : diagonal+1)
+      zeroed(&out, S)
+      return (out, shapeOut)
     }
   }
   

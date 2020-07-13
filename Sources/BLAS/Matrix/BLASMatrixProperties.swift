@@ -8,7 +8,6 @@
 //
 
 import Foundation
-import Accelerate
 
 extension BLAS {
   
@@ -16,6 +15,15 @@ extension BLAS {
     let n = Swift.min(shape.r, shape.c)
     let diagi = (0..<n).map { $0*n + $0 }
     return BLAS.gather(a, diagi)
+  }
+
+  public static func diag<T>(_ a: [T]) -> [T] where T: AccelerateNumeric {
+    let n = a.count
+    var out = [T](repeating: 0, count: n*n)
+    (0..<n).forEach { i in
+      out[i*n+i] = a[i]
+    }
+    return out
   }
   
   public static func trace<T>(_ a: [T], _ shape: RowCol) -> T where T: AccelerateNumeric {

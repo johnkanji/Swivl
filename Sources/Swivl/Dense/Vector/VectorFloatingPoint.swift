@@ -8,35 +8,52 @@
 //
 
 import Foundation
-import Accelerate
 import BLAS
 
 extension Vector: RealVector where Element: AccelerateFloatingPoint {
-  
+
+  //  MARK: Vector Properties
+
   public var length: T {
     BLAS.length(array)
   }
+  public var norm: T { self.length }
+
+
+//  MARK: Unary Operators
+
+  public func mean() -> T {
+    BLAS.mean(array)
+  }
+
   
-//  MARK: Vector-Vector Arithmetic
+//  MARK: Binary Operators
+//  Overrides
   
   public static func subtract(_ lhs: Self, _ rhs: Self) -> Self {
     Self(BLAS.subtract(lhs.array, rhs.array))
   }
+
   public static func multiply(_ lhs: Self, _ rhs: Self) -> Self {
     Self(BLAS.multiplyElementwise(lhs.array, rhs.array))
   }
-  public static func divide(_ lhs: Self, _ rhs: Self) -> Self {
-    Self(BLAS.divideElementwise(lhs.array, rhs.array))
+  public static func multiply(_ lhs: Self, _ rhs: T) -> Self {
+    Self(BLAS.multiplyScalar(lhs.array, rhs))
   }
+
   public static func dot(_ lhs: Self, _ rhs: Self) -> Element {
     BLAS.dot(lhs.array, rhs.array)
   }
+
+
+//  MARK: Geometry
   
   public static func dist(_ lhs: Self, _ rhs: Self) -> Element {
     BLAS.dist(lhs.array, rhs.array)
   }
 
-//  MARK: Vector Generation
+
+//  MARK: Vector Creation
   
   /// Create a vector linearly interpolating the given bounds inclusively.
   ///
@@ -48,35 +65,13 @@ extension Vector: RealVector where Element: AccelerateFloatingPoint {
   public static func linear(_ start: Element, _ stop: Element, _ count: Int) -> Self {
     Self(BLAS.linear(start, stop, count))
   }
+
   public static func rand(_ count: Int) -> Self {
     Self(BLAS.rand(count))
   }
+
   public static func randn(_ count: Int) -> Self {
     Self(BLAS.randn(count))
-  }
-  
-  
-//  MARK: Approximate Equatable
-  
-  static func ==~ (lhs: Self, rhs: Self) -> Bool
-  {
-    return lhs.count == rhs.count &&
-      zip(lhs.array, rhs.array).allSatisfy { (l, r) in l ==~ r }
-  }
-  
-  static func !=~ (lhs: Self, rhs: Self) -> Bool
-  {
-    return !(lhs ==~ rhs)
-  }
-  
-  /// Check if two vectors are equal using approximate comparison
-  public static func == (lhs: Self, rhs: Self) -> Bool {
-    return lhs ==~ rhs
-  }
-  
-  /// Check if two vectors are not equal using approximate comparison
-  public static func != (lhs: Self, rhs: Self) -> Bool {
-    return lhs !=~ rhs
   }
 
 }

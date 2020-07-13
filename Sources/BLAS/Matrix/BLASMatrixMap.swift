@@ -8,7 +8,6 @@
 //
 
 import Foundation
-import Accelerate
 
 extension BLAS {
   

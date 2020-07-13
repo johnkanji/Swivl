@@ -12,6 +12,7 @@ import Accelerate
 
 public enum BLAS {
   static let s1 = vDSP_Stride(1)
+  static let rowMajor: Int32 = MatrixLayout.rowMajor.rawValue
   
   static func memoryCompatible<T, U>(_ a: T.Type, _ b: U.Type) -> Bool {
     MemoryLayout<T>.size == MemoryLayout<U>.size &&
@@ -19,10 +20,6 @@ public enum BLAS {
     MemoryLayout<T>.alignment == MemoryLayout<U>.alignment
   }
   
-  public enum BLASError: Error {
-    case invalidType
-    case invalidMatrix(String)
-  }
 }
 
 public typealias RowCol = (r: Int, c: Int)
