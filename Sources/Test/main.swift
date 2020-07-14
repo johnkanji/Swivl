@@ -75,3 +75,26 @@ print(C)
 let D = SparseMatrix<Double>.eye(4)
 print(D)
 print(D.dense())
+
+
+let v1 = Vector3d([1,2,3])
+let v2 = Vector3d([10,10,10])
+print(v1)
+print()
+print(v1+v2)
+print(v1-v2)
+print(v1/v2)
+print(v1.*v2)
+print(v1*v2)
+
+
+//  TODO: wtf
+//  func simd_mul(simd_float2x4, simd_float2x2) -> simd_float2x4
+//  Returns the product of two matrices.
+
+//  func simd_mul(simd_float3x4, simd_float2x3) -> simd_float2x4
+//  Returns the product of two matrices.
+
+//  func simd_mul(simd_float4x4, simd_float2x4) -> simd_float2x4
+//  Returns the product of two matrices.
+

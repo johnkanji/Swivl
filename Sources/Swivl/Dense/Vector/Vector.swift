@@ -11,7 +11,6 @@ import Foundation
 import BLAS
 
 public struct Vector<Scalar>: VectorProtocol where Scalar: AccelerateNumeric {
-
   public typealias Element = Scalar
   public typealias Index = Array<Scalar>.Index
 

@@ -12,14 +12,6 @@ import BLAS
 
 extension Vector: RealVector where Scalar: AccelerateFloatingPoint {
 
-  //  MARK: Vector Properties
-
-  public var length: Scalar {
-    BLAS.length(array)
-  }
-  public var norm: Scalar { self.length }
-
-
 //  MARK: Unary Operators
 
   public func mean() -> Scalar {
@@ -46,10 +38,30 @@ extension Vector: RealVector where Scalar: AccelerateFloatingPoint {
   }
 
 
-//  MARK: Geometry
+//  MARK: Geometric Operations
   
   public static func dist(_ lhs: Self, _ rhs: Self) -> Scalar {
     BLAS.dist(lhs.array, rhs.array)
+  }
+
+  public static func normalize(_ v: Self) -> Self {
+    v / v.length
+  }
+
+//  TODO: STUB
+  public static func project(_ a: Self, onto b: Self) -> Self {
+    Self()
+  }
+
+//  TODO: STUB
+  public static func cross(_ a: Vector<Scalar>, _ b: Vector<Scalar>) -> Vector<Scalar> {
+    precondition(a.count == 3 && b.count == 3)
+    return Self()
+  }
+  public func cross(_ v: Self) -> Self { Self.cross(self, v) }
+
+  func _length() -> Scalar {
+    BLAS.length(array)
   }
 
 

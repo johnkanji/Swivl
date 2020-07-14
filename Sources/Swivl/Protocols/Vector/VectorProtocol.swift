@@ -10,8 +10,7 @@
 import Foundation
 import BLAS
 
-
-public protocol VectorProtocol: Collection, Equatable where Scalar: Numeric {
+public protocol VectorProtocol: Collection, Equatable where Element: Numeric {
   typealias Scalar = Element
 
 //  MARK: Initializers
@@ -180,9 +179,11 @@ public protocol VectorProtocol: Collection, Equatable where Scalar: Numeric {
 
 
 
-//  MARK: Default Implementations
+//  MARK: - Default Implementations
 
 extension VectorProtocol {
+
+//  MARK: Intitializers
 
   public init(row: [Scalar]) {
     self.init(row, shape: RowCol(1, row.count))
@@ -191,6 +192,9 @@ extension VectorProtocol {
   public init(column: [Scalar]) {
     self.init(column, shape: RowCol(column.count, 1))
   }
+
+
+//  MARK: Subscripts
 
   public var startIndex: Int { 0 }
   public var endIndex: Int { self.count }
@@ -201,20 +205,29 @@ extension VectorProtocol {
   }
 
 
-  static func add(_ a: Scalar, _ b: Self) -> Self {
+//  MARK: Unary Operators
+
+  func _length() -> Scalar {
+    (self.*self).sum()
+  }
+
+
+//  MARK: Arithmetic
+
+  public static func add(_ a: Scalar, _ b: Self) -> Self {
     return Self.add(b, a)
   }
 
-  static func subtract(_ a: Scalar, _ b: Self) -> Self {
+  public static func subtract(_ a: Scalar, _ b: Self) -> Self {
     return Self.negate(Self.subtract(b, a))
   }
 
-  static func multiply(_ a: Scalar, _ b: Self) -> Self {
+  public static func multiply(_ a: Scalar, _ b: Self) -> Self {
     return Self.multiply(b, a)
   }
 
   
-  // MARK: - Operators: Vector-Vector
+  // MARK: Operators: Vector-Vector
 
   /// Perform vector addition.
   ///
@@ -224,7 +237,7 @@ extension VectorProtocol {
   ///     - lhs: left vector
   ///     - rhs: right vector
   /// - Returns: elementwise vector sum of a and b
-  static func + (_ lhs: Self , _ rhs: Self) -> Self {
+  public static func + (_ lhs: Self , _ rhs: Self) -> Self {
     Self.add(lhs, rhs)
   }
 
@@ -237,7 +250,7 @@ extension VectorProtocol {
   ///     - lhs: left vector
   ///     - rhs: right vector
   /// - Returns: elementwise vector difference of a and b
-  static func - (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func - (_ lhs: Self, _ rhs: Self) -> Self {
     Self.subtract(lhs, rhs)
   }
 
@@ -250,7 +263,7 @@ extension VectorProtocol {
   ///     - lhs: left vector
   ///     - rhs: right vector
   /// - Returns: elementwise vector product of a and b
-  static func .* (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func .* (_ lhs: Self, _ rhs: Self) -> Self {
     Self.multiply(lhs, rhs)
   }
 
@@ -263,7 +276,7 @@ extension VectorProtocol {
   ///     - lhs: left vector
   ///     - rhs: right vector
   /// - Returns: dot product of a and b
-  static func * (_ lhs: Self, _ rhs: Self) -> Scalar {
+  public static func * (_ lhs: Self, _ rhs: Self) -> Scalar {
     Self.dot(lhs, rhs)
   }
   
@@ -281,7 +294,7 @@ extension VectorProtocol {
   ///     - lhs: vector
   ///     - rhs: scalar
   /// - Returns: elementwise sum of vector a and scalar b
-  static func + (_ lhs: Self, _ rhs: Scalar) -> Self {
+  public static func + (_ lhs: Self, _ rhs: Scalar) -> Self {
     Self.add(lhs, rhs)
   }
   /// Perform scalar and vector addition.
@@ -295,7 +308,7 @@ extension VectorProtocol {
   ///     - lhs: scalar
   ///     - rhs: vector
   /// - Returns: elementwise sum of scalar a and vector b
-  static func + (_ lhs: Scalar, _ rhs: Self) -> Self {
+  public static func + (_ lhs: Scalar, _ rhs: Self) -> Self {
     Self.add(lhs, rhs)
   }
 
@@ -311,7 +324,7 @@ extension VectorProtocol {
   ///     - lhs: vector
   ///     - rhs: scalar
   /// - Returns: elementwise difference of vector a and scalar b
-  static func - (_ lhs: Self, _ rhs: Scalar) -> Self {
+  public static func - (_ lhs: Self, _ rhs: Scalar) -> Self {
     Self.subtract(lhs, rhs)
   }
   /// Perform scalar and vector subtraction.
@@ -325,7 +338,7 @@ extension VectorProtocol {
   ///     - lhs: scalar
   ///     - rhs: vector
   /// - Returns: elementwise difference of scalar a and vector b
-  static func - (_ lhs: Scalar, _ rhs: Self) -> Self {
+  public static func - (_ lhs: Scalar, _ rhs: Self) -> Self {
     Self.subtract(lhs, rhs)
   }
 
@@ -341,7 +354,7 @@ extension VectorProtocol {
   ///     - lhs: vector
   ///     - rhs: scalar
   /// - Returns: elementwise product of vector a and scalar b
-  static func .* (_ lhs: Self, _ rhs: Scalar) -> Self {
+  public static func .* (_ lhs: Self, _ rhs: Scalar) -> Self {
     Self.multiply(lhs, rhs)
   }
   /// Perform scalar and vector multiplication.
@@ -355,7 +368,7 @@ extension VectorProtocol {
   ///     - lhs: scalar
   ///     - rhs: vector
   /// - Returns: elementwise product of scalar a and vector b
-  static func .* (_ lhs: Scalar, _ rhs: Self) -> Self {
+  public static func .* (_ lhs: Scalar, _ rhs: Self) -> Self {
     Self.multiply(lhs, rhs)
   }
   /// Perform vector and scalar multiplication.
@@ -369,7 +382,7 @@ extension VectorProtocol {
   ///     - lhs: vector
   ///     - rhs: scalar
   /// - Returns: elementwise product of vector a and scalar b
-  static func * (_ lhs: Self, _ rhs: Scalar) -> Self {
+  public static func * (_ lhs: Self, _ rhs: Scalar) -> Self {
     Self.multiply(lhs, rhs)
   }
   /// Perform scalar and vector multiplication.
@@ -383,7 +396,7 @@ extension VectorProtocol {
   ///     - lhs: scalar
   ///     - rhs: vector
   /// - Returns: elementwise product of scalar a and vector b
-  static func * (_ lhs: Scalar, _ rhs: Self) -> Self {
+  public static func * (_ lhs: Scalar, _ rhs: Self) -> Self {
     Self.multiply(lhs, rhs)
   }
 
@@ -399,7 +412,7 @@ extension VectorProtocol {
   ///     - lhs: vector
   ///     - rhs: scalar
   /// - Returns: result of elementwise division of vector a by scalar b
-  static func ./ (_ lhs: Self, _ rhs: Scalar) -> Self {
+  public static func ./ (_ lhs: Self, _ rhs: Scalar) -> Self {
     Self.divide(lhs, rhs)
   }
   /// Perform vector and scalar right division.
@@ -413,7 +426,7 @@ extension VectorProtocol {
   ///     - lhs: vector
   ///     - rhs: scalar
   /// - Returns: result of elementwise division of vector a by scalar b
-  static func / (_ lhs: Self, _ rhs: Scalar) -> Self {
+  public static func / (_ lhs: Self, _ rhs: Scalar) -> Self {
     Self.divide(lhs, rhs)
   }
 
@@ -425,7 +438,8 @@ extension VectorProtocol {
   /// - Parameters
   ///     - lhs: vector
   /// - Returns: vector of negated values of elements of vector a
-  static prefix func - (_ lhs: Self) -> Self {
+  public static prefix func - (_ lhs: Self) -> Self {
     Self.negate(lhs)
   }
+
 }

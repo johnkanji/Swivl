@@ -35,7 +35,11 @@ public protocol RealVector: VectorProtocol {
   static func divide(_ lhs: Self, _ rhs: Self) -> Self
 
 
-//  MARK: Geometry
+  //  MARK: Geometric Operations
+
+  static func normalize(_ v: Self) -> Self
+
+  static func project(_ a: Self, onto b: Self) -> Self
 
   static func dist(_ a: Self, _ b: Self) -> Scalar
 
@@ -52,7 +56,17 @@ public protocol RealVector: VectorProtocol {
 
 extension RealVector {
 
-  var norm: Scalar { self.length }
+  public var length: Scalar { self._length() }
+  public var norm: Scalar { self._length() }
+
+
+//  MARK: Geometric Operations
+
+  public func dist(_ v: Self) -> Scalar { Self.dist(self, v) }
+
+  public func project(onto v: Self) -> Self { Self.project(self, onto: v) }
+
+  public func normalized() -> Self { Self.normalize(self) }
 
 
   /// Perform vector right division.
