@@ -56,7 +56,7 @@ public protocol MatrixProtocol: Collection, Equatable where Element: Numeric {
 
   static postfix func †(_ a: Self) -> Self
 
-  func diag<V>() -> V where V: VectorProtocol, V.T == Scalar
+  func diag<V>() -> V where V: VectorProtocol, V.Scalar == Scalar
 
   func tri(_ triangle: TriangularType, diagonal: Int) -> Self
 

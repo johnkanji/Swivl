@@ -165,7 +165,7 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
     a.T
   }
 
-  public func diag<V>() -> V where V : VectorProtocol, Self.Scalar == V.T {
+  public func diag<V>() -> V where V : VectorProtocol, Self.Scalar == V.Scalar {
     V()
   }
 

@@ -160,7 +160,7 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
     vcat(lhs, rhs)
   }
 
-  public func diag<V>() -> V where V: VectorProtocol, V.T == Scalar {
+  public func diag<V>() -> V where V: VectorProtocol, V.Scalar == Scalar {
     V(BLAS.diag(_flat, shape))
   }
   public func diag() -> Vector<Scalar> {

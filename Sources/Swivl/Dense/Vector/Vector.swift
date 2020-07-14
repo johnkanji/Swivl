@@ -10,10 +10,10 @@
 import Foundation
 import BLAS
 
-public struct Vector<T>: VectorProtocol where T: AccelerateNumeric {
+public struct Vector<Scalar>: VectorProtocol where Scalar: AccelerateNumeric {
 
-  public typealias Element = T
-  public typealias Index = Array<T>.Index
+  public typealias Element = Scalar
+  public typealias Index = Array<Scalar>.Index
 
   public var array: [Element]
   var layout: MatrixLayout = .columnMajor
@@ -29,11 +29,11 @@ public struct Vector<T>: VectorProtocol where T: AccelerateNumeric {
     array = []
   }
 
-  public init(_ v: [T]) {
+  public init(_ v: [Scalar]) {
     array = v
   }
 
-  init(_ v: [T], _ layout: MatrixLayout) {
+  init(_ v: [Scalar], _ layout: MatrixLayout) {
     switch layout {
     case .rowMajor:
       self.init(row: v)
@@ -42,16 +42,16 @@ public struct Vector<T>: VectorProtocol where T: AccelerateNumeric {
     }
   }
   
-  public init(row: [T]) {
+  public init(row: [Scalar]) {
     self.init(row)
     self.layout = .rowMajor
   }
   
-  public init(column: [T]) {
+  public init(column: [Scalar]) {
     self.init(column)
   }
   
-  public init(_ array: [T], shape: RowCol) {
+  public init(_ array: [Scalar], shape: RowCol) {
     precondition(shape.r == 1 || shape.c == 1)
     self.array = array
     self.layout = shape.r == 1 ? .rowMajor : .columnMajor
@@ -60,20 +60,20 @@ public struct Vector<T>: VectorProtocol where T: AccelerateNumeric {
 
 //  MARK: Subscripts
 
-  public subscript(position: Array<T>.Index) -> T {
+  public subscript(position: Index) -> Scalar {
     _read {
       yield array[position]
     }
   }
 
-  public func index(after i: Array<T>.Index) -> Array<T>.Index {
+  public func index(after i: Index) -> Index {
     array.index(after: i)
   }
 
 
 //  MARK: Manipulation
 
-  public func diag<M>() -> M where M: MatrixProtocol, M.Scalar == T {
+  public func diag<M>() -> M where M: MatrixProtocol, M.Scalar == Scalar {
     M(flat: BLAS.diag(array), shape: (count, count))
   }
 
@@ -92,7 +92,7 @@ public struct Vector<T>: VectorProtocol where T: AccelerateNumeric {
     Self(BLAS.abs(array), layout)
   }
 
-  public func max() -> T? {
+  public func max() -> Scalar? {
     array.max()
   }
   public func maxIndex() -> Int? {
@@ -100,7 +100,7 @@ public struct Vector<T>: VectorProtocol where T: AccelerateNumeric {
     return array.firstIndex(of: m)
   }
 
-  public func min() -> T? {
+  public func min() -> Scalar? {
     array.min()
   }
   public func minIndex() -> Int? {
@@ -108,7 +108,7 @@ public struct Vector<T>: VectorProtocol where T: AccelerateNumeric {
     return array.firstIndex(of: m)
   }
 
-  public func sum() -> T {
+  public func sum() -> Scalar {
     array.sum()
   }
 
@@ -126,51 +126,51 @@ public struct Vector<T>: VectorProtocol where T: AccelerateNumeric {
   public static func add(_ lhs: Self, _ rhs: Self) -> Self {
     Self(BLAS.add(lhs.array, rhs.array))
   }
-  public static func add(_ lhs: Self, _ rhs: T) -> Self {
+  public static func add(_ lhs: Self, _ rhs: Scalar) -> Self {
     Self(BLAS.addScalar(lhs.array, rhs))
   }
 
   public static func subtract(_ lhs: Self, _ rhs: Self) -> Self {
     lhs + (-rhs)
   }
-  public static func subtract(_ lhs: Self, _ rhs: T) -> Self {
+  public static func subtract(_ lhs: Self, _ rhs: Scalar) -> Self {
     Self(BLAS.subtractScalar(lhs.array, rhs))
   }
 
   public static func multiply(_ lhs: Self, _ rhs: Self) -> Self {
     Self(zip(lhs.array, rhs.array).map { l, r in l * r })
   }
-  public static func multiply(_ lhs: Self, _ rhs: T) -> Self {
+  public static func multiply(_ lhs: Self, _ rhs: Scalar) -> Self {
     Self(lhs.array.map { l in l * rhs })
   }
 
   public static func divide(_ lhs: Self, _ rhs: Self) -> Self {
     Self(BLAS.divideElementwise(lhs.array, rhs.array))
   }
-  public static func divide(_ lhs: Self, _ rhs: T) -> Self {
+  public static func divide(_ lhs: Self, _ rhs: Scalar) -> Self {
     Self(BLAS.divideScalar(lhs.array, rhs))
   }
 
 
-  public static func dot(_ lhs: Self, _ rhs: Self) -> T {
-    return zip(lhs, rhs).map{ l, r -> T in l*r }.sum()
+  public static func dot(_ lhs: Self, _ rhs: Self) -> Scalar {
+    return zip(lhs, rhs).map{ l, r -> Scalar in l*r }.sum()
   }
 
 
 //  MARK: Vector Creation
   
   public static func zeros(_ count: Int) -> Self {
-    return Self([T].init(repeating: 0, count: count))
+    return Self([Scalar].init(repeating: 0, count: count))
   }
   
   public static func ones(_ count: Int) -> Self {
-    return Self([T].init(repeating: 1, count: count))
+    return Self([Scalar].init(repeating: 1, count: count))
   }
 
 
 //  MARK: Conversions
 
-  public func matrix() -> Matrix<T> {
+  public func matrix() -> Matrix<Scalar> {
     Matrix(flat: array, shape: RowCol(rows, cols))
   }
 

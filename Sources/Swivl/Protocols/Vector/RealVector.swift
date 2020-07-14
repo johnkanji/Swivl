@@ -14,12 +14,12 @@ public protocol RealVector: VectorProtocol {
 
 //  MARK: Vector Properties
 
-  var length: T { get }
+  var length: Scalar { get }
 
 
 //  MARK: Unary Operators
 
-  func mean() -> T
+  func mean() -> Scalar
 
 
 //  MARK: Arithmetic
@@ -37,12 +37,12 @@ public protocol RealVector: VectorProtocol {
 
 //  MARK: Geometry
 
-  static func dist(_ a: Self, _ b: Self) -> T
+  static func dist(_ a: Self, _ b: Self) -> Scalar
 
 
 //  MARK: Vector Creation
 
-  static func linear(_ start: T, _ stop: T, _ count: Int) -> Self
+  static func linear(_ start: Scalar, _ stop: Scalar, _ count: Int) -> Self
 
   static func rand(_ count: Int) -> Self
 
@@ -52,7 +52,7 @@ public protocol RealVector: VectorProtocol {
 
 extension RealVector {
 
-  var norm: T { self.length }
+  var norm: Scalar { self.length }
 
 
   /// Perform vector right division.

@@ -11,7 +11,7 @@ import Foundation
 import BLAS
 
 extension Vector {
-  public subscript(row: Index, col: Index) -> T {
+  public subscript(row: Index, col: Index) -> Scalar {
     get { layout == .rowMajor ? array[col] : array[row] }
     set {
       let i = layout == .rowMajor ? col: row
@@ -53,7 +53,7 @@ extension Vector: Equatable {
     lhs.count == rhs.count &&
     lhs.array == rhs.array
   }
-  public static func == (lhs: Self, rhs: Self) -> Bool where T: ApproximatelyEquatable {
+  public static func == (lhs: Self, rhs: Self) -> Bool where Scalar: ApproximatelyEquatable {
     lhs.layout == rhs.layout &&
     lhs.count == rhs.count &&
     zip(lhs.array, rhs.array).allSatisfy { $0 ==~ $1 }

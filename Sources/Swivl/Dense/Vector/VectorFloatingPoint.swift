@@ -10,19 +10,19 @@
 import Foundation
 import BLAS
 
-extension Vector: RealVector where Element: AccelerateFloatingPoint {
+extension Vector: RealVector where Scalar: AccelerateFloatingPoint {
 
   //  MARK: Vector Properties
 
-  public var length: T {
+  public var length: Scalar {
     BLAS.length(array)
   }
-  public var norm: T { self.length }
+  public var norm: Scalar { self.length }
 
 
 //  MARK: Unary Operators
 
-  public func mean() -> T {
+  public func mean() -> Scalar {
     BLAS.mean(array)
   }
 
@@ -37,18 +37,18 @@ extension Vector: RealVector where Element: AccelerateFloatingPoint {
   public static func multiply(_ lhs: Self, _ rhs: Self) -> Self {
     Self(BLAS.multiplyElementwise(lhs.array, rhs.array))
   }
-  public static func multiply(_ lhs: Self, _ rhs: T) -> Self {
+  public static func multiply(_ lhs: Self, _ rhs: Scalar) -> Self {
     Self(BLAS.multiplyScalar(lhs.array, rhs))
   }
 
-  public static func dot(_ lhs: Self, _ rhs: Self) -> Element {
+  public static func dot(_ lhs: Self, _ rhs: Self) -> Scalar {
     BLAS.dot(lhs.array, rhs.array)
   }
 
 
 //  MARK: Geometry
   
-  public static func dist(_ lhs: Self, _ rhs: Self) -> Element {
+  public static func dist(_ lhs: Self, _ rhs: Self) -> Scalar {
     BLAS.dist(lhs.array, rhs.array)
   }
 
@@ -62,7 +62,7 @@ extension Vector: RealVector where Element: AccelerateFloatingPoint {
   ///    - stop: upper bound
   ///    - count: number of elements
   /// - Returns: ones vector of specified size
-  public static func linear(_ start: Element, _ stop: Element, _ count: Int) -> Self {
+  public static func linear(_ start: Scalar, _ stop: Scalar, _ count: Int) -> Self {
     Self(BLAS.linear(start, stop, count))
   }
 

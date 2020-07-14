@@ -124,7 +124,7 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
   }
 
   public func eig<VR>(vectors: SingularVectorOutput = .none) -> (values: VR, leftVectors: Self?, rightVectors: Self?)
-  where VR: VectorProtocol, VR.T == Scalar {
+  where VR: VectorProtocol, VR.Scalar == Scalar {
     let left = vectors == .left || vectors == .both
     let right = vectors == .right || vectors == .both
 
@@ -133,7 +133,7 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
   }
 
   public func SVD<VR>(vectors: SingularVectorOutput = .none) -> (values: VR, leftVectors: Self?, rightVectors: Self?)
-  where VR : VectorProtocol, VR.T == Scalar {
+  where VR : VectorProtocol, VR.Scalar == Scalar {
     (VR(), nil, nil)
   }
   

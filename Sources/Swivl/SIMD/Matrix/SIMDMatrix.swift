@@ -135,7 +135,7 @@ extension SIMDMatrix where Scalar: AccelerateFloatingPoint {
     a.T
   }
 
-  public func diag<V>() -> V where V : VectorProtocol, V.T == Scalar {
+  public func diag<V>() -> V where V : VectorProtocol, V.Scalar == Scalar {
     V((0..<Swift.min(rows, cols)).map { i in self[i,i] })
   }
 
