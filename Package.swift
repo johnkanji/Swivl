@@ -10,14 +10,18 @@ let package = Package(
   products: [
     .executable(name: "Test", targets: ["Test"]),
     .library(name: "Swiggl", targets: ["Swiggl"]),
-    .library(name: "Swivl", targets: ["Swivl"])
+    .library(name: "Swivl", targets: ["Swivl"]),
   ],
   targets: [
-    .systemLibrary(name: "CLapacke", pkgConfig: "lapacke", providers: [.brew(["lapack"])]),
-    .systemLibrary(name: "SuperLU", providers: [.brew(["superlu"])]),
+    .systemLibrary(name: "CXSparse", path: "External/CXSparse"),
+    .systemLibrary(name: "SuperLU", path: "External/SuperLU"),
+    .systemLibrary(name: "OSQP", path: "External/OSQP"),
     .target(
       name: "BLAS",
-      dependencies: ["CLapacke", "SuperLU"]),
+      dependencies: ["SuperLU", "OSQP", "CXSparse"],
+      cSettings: [.unsafeFlags(["-IExternal"])],
+      linkerSettings: [.unsafeFlags(["-LExternal/lib"])]
+    ),
     .target(
       name: "Swiggl",
       dependencies: ["Swivl"]),
@@ -26,10 +30,10 @@ let package = Package(
       dependencies: ["BLAS"]),
     .target(
       name:"Test",
-      dependencies: ["Swiggl", "BLAS", "CLapacke"]),
+      dependencies: ["Swivl", "BLAS"]),
     
-    .testTarget(
-      name: "SwigglTests",
-      dependencies: ["Swiggl"])
+//    .testTarget(
+//      name: "SwigglTests",
+//      dependencies: ["Swiggl"])
   ]
 )

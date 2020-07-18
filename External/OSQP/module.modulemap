@@ -1,0 +1,6 @@
+module OSQP {
+  header "include/osqp.h"
+  link "osqp"
+  export *
+}
+

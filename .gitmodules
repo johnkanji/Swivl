@@ -1,0 +1,6 @@
+[submodule "External/qdldl/qdldl"]
+	path = External/qdldl/qdldl
+	url = git@github.com:oxfordcontrol/qdldl.git
+[submodule "External/osqp/osqp"]
+	path = External/osqp/osqp
+	url = git@github.com:oxfordcontrol/osqp.git
