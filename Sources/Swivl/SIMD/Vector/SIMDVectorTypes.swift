@@ -8,12 +8,12 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 import simd
 
 //  MARK: - Vector2
 
-extension SIMD2 where Scalar: AccelerateFloatingPoint {
+extension SIMD2 where Scalar: SwivlFloatingPoint {
   public typealias Element = Scalar
 
   public func abs() -> Self where Scalar == Double { simd_abs(self) }
@@ -36,7 +36,7 @@ extension SIMD2 where Scalar: AccelerateFloatingPoint {
 
 }
 
-extension SIMD2: VectorProtocol, Collection, Sequence where Scalar: AccelerateFloatingPoint {}
+extension SIMD2: VectorProtocol, Collection, Sequence where Scalar: SwivlFloatingPoint {}
 
 public typealias Vector2d = SIMD2<Double>
 public typealias Vector2f = SIMD2<Float>
@@ -44,7 +44,7 @@ public typealias Vector2f = SIMD2<Float>
 
 //  MARK: - Vector3
 
-extension SIMD3 where Scalar: AccelerateFloatingPoint {
+extension SIMD3 where Scalar: SwivlFloatingPoint {
   public typealias Element = Scalar
 
   public func abs() -> Self where Scalar == Double { simd_abs(self) }
@@ -70,7 +70,7 @@ extension SIMD3 where Scalar: AccelerateFloatingPoint {
 
 }
 
-extension SIMD3: VectorProtocol, Collection, Sequence where Scalar: AccelerateFloatingPoint {}
+extension SIMD3: VectorProtocol, Collection, Sequence where Scalar: SwivlFloatingPoint {}
 
 public typealias Vector3d = SIMD3<Double>
 public typealias Vector3f = SIMD3<Float>
@@ -78,7 +78,7 @@ public typealias Vector3f = SIMD3<Float>
 
 //  MARK: - Vector4
 
-extension SIMD4 where Scalar: AccelerateFloatingPoint {
+extension SIMD4 where Scalar: SwivlFloatingPoint {
   public typealias Element = Scalar
 
   public func abs() -> Self where Scalar == Double { simd_abs(self) }
@@ -101,7 +101,7 @@ extension SIMD4 where Scalar: AccelerateFloatingPoint {
 
 }
 
-extension SIMD4: VectorProtocol, Collection, Sequence where Scalar: AccelerateFloatingPoint {}
+extension SIMD4: VectorProtocol, Collection, Sequence where Scalar: SwivlFloatingPoint {}
 
 public typealias Vector4d = SIMD4<Double>
 public typealias Vector4f = SIMD4<Float>

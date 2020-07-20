@@ -8,13 +8,13 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
-public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
+public struct Matrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
   public typealias Element = Scalar
   public typealias Index = Array<Scalar>.Index
   
-  var _flat: [Scalar]
+  public var _flat: [Scalar]
   var _rows: Int
   var _cols: Int
   var _layout: MatrixLayout = .defaultLayout
@@ -28,6 +28,8 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
   public var count: Int { flat.count }
   public var startIndex: Index { flat.startIndex }
   public var endIndex: Index { flat.endIndex }
+
+  var _mat: Mat<Scalar> { Mat<Scalar>(_flat, shape) }
 
 
 //  MARK: Matrix Properties
@@ -53,9 +55,10 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
     return self == diagonal.diag()
   }
 
+  var _definite: Bool? = nil
 
   public var trace: Scalar {
-    BLAS.trace(_flat, shape)
+    LinAlg.trace(_mat)
   }
 
   public var norm: Scalar {
@@ -92,6 +95,11 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
     self._flat = flat
     (self._rows, self._cols) = shape
     self._layout = layout
+  }
+
+  init(_ a: Mat<Scalar>, layout: MatrixLayout = .defaultLayout) {
+    _flat = a.flat
+    (_rows, _cols) = a.shape
   }
   
   
@@ -134,7 +142,7 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
   
   /// Copy and transpose
   public var T: Self {
-    Self(flat: BLAS.transpose(flat, shape), shape: (shape.c, shape.r))
+    Self(LinAlg.transpose(_mat))
   }
   
   public static postfix func †(_ a: Self) -> Self {
@@ -143,17 +151,15 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
   
   /// Transpose in place
   public mutating func transpose() {
-    _flat = BLAS.transpose(flat, shape)
+    (_flat, (_rows, _cols)) = LinAlg.transpose(_mat)
   }
 
   public static func hcat(_ matrices: Self...) -> Self {
-    let shape = RowCol(matrices[0].shape.r, matrices.map { m in m.shape.c }.sum())
-    return Self.init(flat: BLAS.hcat(matrices.map(\.flat), shapes: matrices.map(\.shape)), shape: shape)
+    return Self.init(LinAlg.hcat(matrices.map(\._mat)))
   }
 
   public static func vcat(_ matrices: Self...) -> Self {
-    let shape = RowCol(matrices.map { m in m.shape.r }.sum(), matrices[0].shape.c)
-    return Self.init(flat: BLAS.vcat(matrices.map(\.flat), shapes: matrices.map(\.shape)), shape: shape)
+    return Self.init(LinAlg.vcat(matrices.map(\._mat)))
   }
 
   public static func || (_ lhs: Self, _ rhs: Self) -> Self {
@@ -161,15 +167,14 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
   }
 
   public func diag<V>() -> V where V: VectorProtocol, V.Scalar == Scalar {
-    V(BLAS.diag(_flat, shape))
+    V(LinAlg.diag(_mat))
   }
   public func diag() -> Vector<Scalar> {
-    Vector(BLAS.diag(_flat, shape))
+    Vector(LinAlg.diag(_mat))
   }
 
   public func tri(_ triangle: TriangularType, diagonal: Int = 0) -> Self {
-    let (tri, shapeT) = BLAS.triangle(_flat, shape, triangle, diagonal: diagonal)
-    return Self(flat: tri, shape: shapeT)
+    Self(LinAlg.triangle(_mat, triangle, diagonal: diagonal))
   }
 
 
@@ -180,7 +185,7 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
   }
 
   public func abs() -> Self {
-    Self(flat: BLAS.abs(_flat), shape: shape)
+    Self(flat: LinAlg.abs(_flat), shape: shape)
   }
 
   public func max() -> (Scalar, RowCol)? {
@@ -196,7 +201,7 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
     _flat.sum()
   }
 
-  public func mean<R>() -> R where R: AccelerateFloatingPoint {
+  public func mean<R>() -> R where R: SwivlFloatingPoint {
     self.to(type: R.self).mean()
   }
 
@@ -209,18 +214,18 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
   
   public static func add(_ lhs: Self, _ rhs: Self) -> Self {
     precondition(lhs.shape == rhs.shape)
-    return Self(flat: BLAS.add(lhs._flat, rhs._flat), shape: lhs.shape)
+    return Self(flat: LinAlg.add(lhs._flat, rhs._flat), shape: lhs.shape)
   }
   public static func add(_ lhs: Self, _ rhs: Element) -> Self {
-    return Self(flat: BLAS.addScalar(lhs._flat, rhs), shape: lhs.shape)
+    return Self(flat: LinAlg.addScalar(lhs._flat, rhs), shape: lhs.shape)
   }
   
   public static func subtract(_ lhs: Self, _ rhs: Self) -> Self {
     precondition(lhs.shape == rhs.shape)
-    return Self(flat: BLAS.subtract(lhs._flat, rhs._flat), shape: lhs.shape)
+    return Self(flat: LinAlg.subtract(lhs._flat, rhs._flat), shape: lhs.shape)
   }
   public static func subtract(_ lhs: Self, _ rhs: Element) -> Self {
-    return Self(flat: BLAS.subtractScalar(lhs._flat, rhs), shape: lhs.shape)
+    return Self(flat: LinAlg.subtractScalar(lhs._flat, rhs), shape: lhs.shape)
   }
   
   public static func multiplyElements(_ lhs: Self, _ rhs: Self) -> Self {
@@ -233,10 +238,10 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
   
   public static func divideElements(_ lhs: Self, _ rhs: Self) -> Self {
     precondition(lhs.shape == rhs.shape)
-    return Self(flat: BLAS.divideElementwise(lhs._flat, rhs._flat), shape: lhs.shape)
+    return Self(flat: LinAlg.divideElementwise(lhs._flat, rhs._flat), shape: lhs.shape)
   }
   public static func divideElements(_ lhs: Self, _ rhs: Scalar) -> Self {
-    return Self(flat: BLAS.divideScalar(lhs._flat, rhs), shape: lhs.shape)
+    return Self(flat: LinAlg.divideScalar(lhs._flat, rhs), shape: lhs.shape)
   }
 
   
@@ -268,16 +273,18 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
     return Self(flat: [Scalar](repeating: 1, count: rows*cols), shape: RowCol(rows, cols))
   }
 
+//  TODO: STUB
   public static func rand(_ rows: Int, _ cols: Int) -> Self {
     Self(flat: [], shape: (rows, cols))
   }
-  
+
+//  TODO: STUB
   public static func randn(_ rows: Int, _ cols: Int) -> Self {
     Self(flat: [], shape: (rows, cols))
   }
 
   public static func eye(_ n: Int) -> Self {
-    return Self(flat: BLAS.eye(n), shape: (n,n))
+    return Self(LinAlg.eye(n))
   }
 
   
@@ -289,8 +296,8 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: AccelerateNumeric {
     return V(_flat, shape: shape)
   }
 
-  public func to<U>(type: U.Type) -> Matrix<U> where U: AccelerateNumeric {
-    Matrix<U>(flat: BLAS.toType(_flat, type), shape: shape)
+  public func to<U>(type: U.Type) -> Matrix<U> where U: SwivlNumeric {
+    Matrix<U>(flat: LinAlg.toType(_flat, type), shape: shape)
   }
   
 }

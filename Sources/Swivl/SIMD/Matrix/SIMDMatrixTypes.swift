@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 import simd
 
 typealias Matrix2f = simd_float2x2

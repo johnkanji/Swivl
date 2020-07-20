@@ -8,14 +8,14 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
-extension Vector: RealVector where Scalar: AccelerateFloatingPoint {
+extension Vector: RealVector where Scalar: SwivlFloatingPoint {
 
 //  MARK: Unary Operators
 
   public func mean() -> Scalar {
-    BLAS.mean(array)
+    LinAlg.mean(array)
   }
 
   
@@ -23,25 +23,25 @@ extension Vector: RealVector where Scalar: AccelerateFloatingPoint {
 //  Overrides
   
   public static func subtract(_ lhs: Self, _ rhs: Self) -> Self {
-    Self(BLAS.subtract(lhs.array, rhs.array))
+    Self(LinAlg.subtract(lhs.array, rhs.array))
   }
 
   public static func multiply(_ lhs: Self, _ rhs: Self) -> Self {
-    Self(BLAS.multiplyElementwise(lhs.array, rhs.array))
+    Self(LinAlg.multiplyElementwise(lhs.array, rhs.array))
   }
   public static func multiply(_ lhs: Self, _ rhs: Scalar) -> Self {
-    Self(BLAS.multiplyScalar(lhs.array, rhs))
+    Self(LinAlg.multiplyScalar(lhs.array, rhs))
   }
 
   public static func dot(_ lhs: Self, _ rhs: Self) -> Scalar {
-    BLAS.dot(lhs.array, rhs.array)
+    LinAlg.dot(lhs.array, rhs.array)
   }
 
 
 //  MARK: Geometric Operations
   
   public static func dist(_ lhs: Self, _ rhs: Self) -> Scalar {
-    BLAS.dist(lhs.array, rhs.array)
+    LinAlg.dist(lhs.array, rhs.array)
   }
 
   public static func normalize(_ v: Self) -> Self {
@@ -61,7 +61,7 @@ extension Vector: RealVector where Scalar: AccelerateFloatingPoint {
   public func cross(_ v: Self) -> Self { Self.cross(self, v) }
 
   func _length() -> Scalar {
-    BLAS.length(array)
+    LinAlg.length(array)
   }
 
 
@@ -75,15 +75,15 @@ extension Vector: RealVector where Scalar: AccelerateFloatingPoint {
   ///    - count: number of elements
   /// - Returns: ones vector of specified size
   public static func linear(_ start: Scalar, _ stop: Scalar, _ count: Int) -> Self {
-    Self(BLAS.linear(start, stop, count))
+    Self(LinAlg.linear(start, stop, count))
   }
 
   public static func rand(_ count: Int) -> Self {
-    Self(BLAS.rand(count))
+    Self(LinAlg.rand(count))
   }
 
   public static func randn(_ count: Int) -> Self {
-    Self(BLAS.randn(count))
+    Self(LinAlg.randn(count))
   }
 
 }

@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
 public protocol MatrixProtocol: Collection, Equatable where Element: Numeric {
   typealias Scalar = Element
@@ -115,57 +115,57 @@ extension MatrixProtocol {
 
 //  MARK: Operators
 
-  static func + (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func + (_ lhs: Self, _ rhs: Self) -> Self {
     Self.add(lhs, rhs)
   }
-  static func + (_ lhs: Self, _ rhs: Element) -> Self {
+  public static func + (_ lhs: Self, _ rhs: Element) -> Self {
     Self.add(lhs, rhs)
   }
-  static func + (_ lhs: Element, _ rhs: Self) -> Self {
+  public static func + (_ lhs: Element, _ rhs: Self) -> Self {
     Self.add(rhs, lhs)
   }
 
-  static func - (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func - (_ lhs: Self, _ rhs: Self) -> Self {
     Self.subtract(lhs, rhs)
   }
-  static func - (_ lhs: Self, _ rhs: Element) -> Self {
+  public static func - (_ lhs: Self, _ rhs: Element) -> Self {
     Self.subtract(lhs, rhs)
   }
 
-  static func .* (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func .* (_ lhs: Self, _ rhs: Self) -> Self {
     Self.multiplyElements(lhs, rhs)
   }
-  static func .* (_ lhs: Self, _ rhs: Element) -> Self {
+  public static func .* (_ lhs: Self, _ rhs: Element) -> Self {
     Self.multiplyElements(lhs, rhs)
   }
-  static func .* (_ lhs: Element, _ rhs: Self) -> Self {
+  public static func .* (_ lhs: Element, _ rhs: Self) -> Self {
     Self.multiplyElements(rhs, lhs)
   }
-  static func * (_ lhs: Self, _ rhs: Element) -> Self {
+  public static func * (_ lhs: Self, _ rhs: Element) -> Self {
     Self.multiplyElements(lhs, rhs)
   }
-  static func * (_ lhs: Element, _ rhs: Self) -> Self {
+  public static func * (_ lhs: Element, _ rhs: Self) -> Self {
     Self.multiplyElements(rhs, lhs)
 
   }
 
-  static func ./ (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func ./ (_ lhs: Self, _ rhs: Self) -> Self {
     Self.divideElements(lhs, rhs)
   }
-  static func ./ (_ lhs: Self, _ rhs: Element) -> Self {
+  public static func ./ (_ lhs: Self, _ rhs: Element) -> Self {
     Self.divideElements(lhs, rhs)
   }
-  static func ./ (_ lhs: Element, _ rhs: Self) -> Self {
+  public static func ./ (_ lhs: Element, _ rhs: Self) -> Self {
     Self.divideElements(rhs, lhs)
   }
-  static func / (_ lhs: Self, _ rhs: Element) -> Self {
+  public static func / (_ lhs: Self, _ rhs: Element) -> Self {
     Self.divideElements(lhs, rhs)
   }
-  static func / (_ lhs: Element, _ rhs: Self) -> Self {
+  public static func / (_ lhs: Element, _ rhs: Self) -> Self {
     Self.divideElements(rhs, lhs)
   }
 
-  static func * (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func * (_ lhs: Self, _ rhs: Self) -> Self {
     Self.multiplyMatrix(lhs, rhs)
   }
 

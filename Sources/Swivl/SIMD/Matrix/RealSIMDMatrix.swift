@@ -8,9 +8,9 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
-protocol RealSIMDMatrix: SIMDMatrix, RealMatrix where Scalar: AccelerateFloatingPoint {}
+protocol RealSIMDMatrix: SIMDMatrix, RealMatrix where Scalar: SwivlFloatingPoint {}
 
 extension RealSIMDMatrix {
 
@@ -26,7 +26,7 @@ extension RealSIMDMatrix {
     0
   }
 
-  var isDefinite: Bool {
+  mutating func isDefinite() -> Bool {
     false
   }
 

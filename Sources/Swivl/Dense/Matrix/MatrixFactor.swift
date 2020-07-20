@@ -9,88 +9,125 @@
 
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
 public protocol MatrixFactor {
-  associatedtype Scalar: AccelerateFloatingPoint
+  associatedtype Scalar: SwivlFloatingPoint
 
-  func solve(_ b: Matrix<Scalar>) -> Matrix<Scalar>
+  var solve: (Matrix<Scalar>) -> Matrix<Scalar> { get }
 
 }
 
+public class DenseMatrixFactor<Scalar: SwivlFloatingPoint>: MatrixFactor {
+  var L: Matrix<Scalar>? = nil
+  var U: Matrix<Scalar>? = nil
+  var D: Matrix<Scalar>? = nil
+  var P: Matrix<Scalar>? = nil
+  var Q: Matrix<Scalar>? = nil
+  var R: Matrix<Scalar>? = nil
 
-struct CholeskyFactor<Scalar: AccelerateFloatingPoint>: MatrixFactor {
-  var A: [Scalar] = []
-  var tau: [Scalar] = []
-  var shape: RowCol
+  public var solve: (Matrix<Scalar>) -> Matrix<Scalar> = { _ in Matrix() }
+
+  init() {}
+
+}
+
+public class CholeskyFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
+  private var A: [Scalar] = []
+  private var tau: [Scalar] = []
+  private var shape: RowCol
+
+  init(_ a: [Scalar], _ tau: [Scalar], _ shape: RowCol) {
+    self.A = a
+    self.tau = tau
+    self.shape = shape
+  }
 
   public func solve(_ b: Matrix<Scalar>) -> Matrix<Scalar> {
-    let x = BLAS.solveFactorizedCholesky(A, tau)
+    let x = LinAlg.solveFactorizedCholesky(A, tau)
     return Matrix(flat: x, shape: b.shape)
   }
 
 }
 
 
-struct LDLFactor<Scalar: AccelerateFloatingPoint>: MatrixFactor {
-  var A: [Scalar] = []
-  var tau: [Scalar] = []
-  var shape: RowCol
+public class LDLFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
+  private var A: [Scalar] = []
+  private var tau: [Scalar] = []
+  private var shape: RowCol
+
+  init(_ a: [Scalar], _ tau: [Scalar], _ shape: RowCol) {
+    self.A = a
+    self.tau = tau
+    self.shape = shape
+  }
 
   public func solve(_ b: Matrix<Scalar>) -> Matrix<Scalar> {
-    let x = BLAS.solveFactorizedLDL(A, tau)
+    let x = LinAlg.solveFactorizedLDL(A, tau)
     return Matrix(flat: x, shape: b.shape)
   }
 
 }
 
 
-struct LUFactor<Scalar: AccelerateFloatingPoint>: MatrixFactor {
-  var A: [Scalar] = []
-  var tau: [Scalar] = []
-  var shape: RowCol
+public class LUFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
+  private var A: [Scalar] = []
+  private var tau: [Scalar] = []
+  private var shape: RowCol
+
+  init(_ a: [Scalar], _ tau: [Scalar], _ shape: RowCol) {
+    self.A = a
+    self.tau = tau
+    self.shape = shape
+  }
 
   public func solve(_ b: Matrix<Scalar>) -> Matrix<Scalar> {
-    let x = BLAS.solveFactorizedLU(A, tau)
+    let x = LinAlg.solveFactorizedLU(A, tau)
     return Matrix(flat: x, shape: b.shape)
   }
 
 }
 
 
-struct QRFactor<Scalar: AccelerateFloatingPoint>: MatrixFactor {
-  var A: [Scalar] = []
-  var tau: [Scalar] = []
-  var shape: RowCol
+public class QRFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
+  private var A: [Scalar] = []
+  private var tau: [Scalar] = []
+  private var shape: RowCol
+
+  init(_ a: [Scalar], _ tau: [Scalar], _ shape: RowCol) {
+    self.A = a
+    self.tau = tau
+    self.shape = shape
+  }
 
   public func solve(_ b: Matrix<Scalar>) -> Matrix<Scalar> {
-    let x = BLAS.solveFactorizedQR(A, tau)
+    let x = LinAlg.solveFactorizedQR(A, tau)
     return Matrix(flat: x, shape: b.shape)
   }
 
 }
 
 
-extension Matrix where Scalar: AccelerateFloatingPoint {
+extension Matrix where Scalar: SwivlFloatingPoint {
 
-  public func factorizeCholesky() -> some MatrixFactor {
-    let (A, tau) = BLAS.factorizeCholesky(_flat, shape)
-    return CholeskyFactor(A: A, tau: tau, shape: shape)
+  public func factorizeCholesky() -> DenseMatrixFactor<Scalar> {
+    let (A, tau) = LinAlg.factorizeCholesky(_flat, shape)
+    return CholeskyFactor(A, tau, shape)
   }
 
-  public func factorizeLDL() -> some MatrixFactor {
-    let (A, tau) = BLAS.factorizeLDL(_flat, shape)
-    return LDLFactor(A: A, tau: tau, shape: shape)
+  public func factorizeLDL() -> DenseMatrixFactor<Scalar> {
+    let (A, tau) = LinAlg.factorizeLDL(_flat, shape)
+    return LDLFactor(A, tau, shape)
   }
 
-  public func factorizeLU() -> some MatrixFactor {
-    let (A, tau) = BLAS.factorizeLU(_flat, shape)
-    return LUFactor(A: A, tau: tau, shape: shape)
+  public func factorizeLU() -> DenseMatrixFactor<Scalar> {
+    let (A, tau) = LinAlg.factorizeLU(_flat, shape)
+    return LUFactor(A, tau, shape)
   }
 
-  public func factorizeQR() -> some MatrixFactor {
-    let (A, tau) = BLAS.factorizeQR(_flat, shape)
-    return QRFactor(A: A, tau: tau, shape: shape)
+  public func factorizeQR() -> DenseMatrixFactor<Scalar> {
+    let (A, tau) = LinAlg.factorizeQR(_flat, shape)
+    return QRFactor(A, tau, shape)
   }
 
 }

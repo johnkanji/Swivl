@@ -8,9 +8,9 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
-public struct Vector<Scalar>: VectorProtocol where Scalar: AccelerateNumeric {
+public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
   public typealias Element = Scalar
   public typealias Index = Array<Scalar>.Index
 
@@ -73,11 +73,18 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: AccelerateNumeric {
 //  MARK: Manipulation
 
   public func diag<M>() -> M where M: MatrixProtocol, M.Scalar == Scalar {
-    M(flat: BLAS.diag(array), shape: (count, count))
+    M(flat: LinAlg.diag(array).flat, shape: (count, count))
+  }
+  public func diag() -> Matrix<Scalar> {
+    Matrix(LinAlg.diag(array))
   }
 
   public var reversed: Self {
-    Self(BLAS.reverse(self.array))
+    Self(LinAlg.reverse(self.array))
+  }
+
+  static func || (_ lhs: Self, _ rhs: Self) -> Self {
+    Self(lhs.array + rhs.array)
   }
 
 
@@ -88,7 +95,7 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: AccelerateNumeric {
   }
 
   public func abs() -> Self {
-    Self(BLAS.abs(array), layout)
+    Self(LinAlg.abs(array), layout)
   }
 
   public func max() -> Scalar? {
@@ -111,7 +118,7 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: AccelerateNumeric {
     array.sum()
   }
 
-  public func mean<R>() -> R where R: AccelerateFloatingPoint {
+  public func mean<R>() -> R where R: SwivlFloatingPoint {
     self.to(type: R.self).mean()
   }
 
@@ -123,17 +130,17 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: AccelerateNumeric {
 //  MARK: Arithmetic
 
   public static func add(_ lhs: Self, _ rhs: Self) -> Self {
-    Self(BLAS.add(lhs.array, rhs.array))
+    Self(LinAlg.add(lhs.array, rhs.array))
   }
   public static func add(_ lhs: Self, _ rhs: Scalar) -> Self {
-    Self(BLAS.addScalar(lhs.array, rhs))
+    Self(LinAlg.addScalar(lhs.array, rhs))
   }
 
   public static func subtract(_ lhs: Self, _ rhs: Self) -> Self {
     lhs + (-rhs)
   }
   public static func subtract(_ lhs: Self, _ rhs: Scalar) -> Self {
-    Self(BLAS.subtractScalar(lhs.array, rhs))
+    Self(LinAlg.subtractScalar(lhs.array, rhs))
   }
 
   public static func multiply(_ lhs: Self, _ rhs: Self) -> Self {
@@ -144,10 +151,10 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: AccelerateNumeric {
   }
 
   public static func divide(_ lhs: Self, _ rhs: Self) -> Self {
-    Self(BLAS.divideElementwise(lhs.array, rhs.array))
+    Self(LinAlg.divideElementwise(lhs.array, rhs.array))
   }
   public static func divide(_ lhs: Self, _ rhs: Scalar) -> Self {
-    Self(BLAS.divideScalar(lhs.array, rhs))
+    Self(LinAlg.divideScalar(lhs.array, rhs))
   }
 
 
@@ -173,8 +180,8 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: AccelerateNumeric {
     Matrix(flat: array, shape: RowCol(rows, cols))
   }
 
-  public func to<U>(type: U.Type) -> Vector<U> where U: AccelerateNumeric {
-    Vector<U>(BLAS.toType(array, type), layout)
+  public func to<U>(type: U.Type) -> Vector<U> where U: SwivlNumeric {
+    Vector<U>(LinAlg.toType(array, type), layout)
   }
   
 }

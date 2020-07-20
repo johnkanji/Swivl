@@ -8,10 +8,10 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 import simd
 
-extension SIMD where Scalar: AccelerateFloatingPoint {
+extension SIMD where Scalar: SwivlFloatingPoint {
   public typealias Iterator = Array<Scalar>.Iterator
 
 //  MARK: Vector Properties

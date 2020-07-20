@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
 extension Vector {
   public subscript(row: Index, col: Index) -> Scalar {
@@ -68,4 +68,31 @@ extension Vector: Equatable {
 
 extension Vector: CustomStringConvertible {
   public var description: String { array.description }
+}
+
+
+extension Vector: ExpressibleByArrayLiteral {
+  public typealias ArrayLiteralElement = Scalar
+
+  public init(arrayLiteral elements: Scalar...) {
+    self.array = elements
+  }
+}
+
+
+// Useful array wrappers
+extension Vector {
+
+  public func lastIndex(of: Scalar) -> Index? {
+    array.lastIndex(of: of)
+  }
+
+  public func lastIndex(where cond: (Scalar) throws -> Bool) rethrows -> Int? {
+    try array.lastIndex(where: cond)
+  }
+
+  public func last(where cond: (Scalar) throws -> Bool) rethrows -> Scalar? {
+    try array.last(where: cond)
+  }
+
 }

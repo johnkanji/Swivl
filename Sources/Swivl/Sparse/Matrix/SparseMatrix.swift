@@ -9,9 +9,9 @@
 
 import Foundation
 import Accelerate
-import BLAS
+import LinearAlgebra
 
-public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloatingPoint {
+public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPoint {
   public typealias Element = Scalar
   public typealias Index = Int
 
@@ -19,14 +19,16 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
   var _cols: Int
   var _layout = MatrixLayout.columnMajor
 
-  var _rowIndices: [Int32] = []
-  var _columnStarts: [Int] = []
-  var _values: [Scalar]
+  public var _rowIndices: [Int32] = []
+  public var _columnStarts: [Int] = []
+  public var _values: [Scalar]
   var _blockSize: UInt8 = 1
 
   public var rows: Int { _rows }
   public var cols: Int { _cols }
   public var shape: RowCol { RowCol(rows, cols) }
+
+  public var _spmat: SpMat<Scalar> { SpMat<Scalar>(ri: _rowIndices, cs: _columnStarts, v: _values, shape: shape) }
 
 
 //  MARK: Matrix Properties
@@ -84,17 +86,12 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
     _ rows: Int? = nil, _ cols: Int? = nil
   ) {
     precondition(rowIndices.count == colIndices.count && rowIndices.count == values.count)
-    self._rows = rows ?? Int(rowIndices.max()! + 1)
-    self._cols = cols ?? Int(colIndices.max()! + 1)
-    self._values = values
-    let comp: (RowCol, RowCol) -> Bool = { a, b in (a.c < b.c) || (a.c <= b.c && a.r <= b.r) }
-    self._rowIndices = zip(rowIndices, colIndices).sorted(by: comp).map { Int32($0.0) }
-    self._columnStarts = colIndices.reduce(into: [Int](repeating: 0, count: _cols)) { acc, c in acc[c] += 1 }.cumsum()
+    let shape = rows != nil && cols != nil ? RowCol(rows!, cols!) : nil
+    self.init(LinAlg.tripletToCSC(rowIndices, colIndices, values, shape: shape))
   }
 
   public init(_ m: Matrix<Scalar>) {
-    let rcs = m._flat.enumerated().filter { $0.1 != 0 }.map { m.flatIndexToRowColumn($0.0) }
-    self.init(rcs.map { $0.r }, rcs.map { $0.c }, m._flat.filter { $0 != 0 }, m.rows, m.cols)
+    self.init(LinAlg.denseToCSC(m._mat))
   }
 
   public init(_ rows: [[Scalar]]) {
@@ -109,6 +106,14 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
     self.init()
   }
 
+  public init(_ a: SpMat<Scalar>) {
+    self._rowIndices = a.ri
+    self._columnStarts = a.cs
+    self._values = a.v
+    self._rows = a.shape.r
+    self._cols = a.shape.c
+  }
+
 
 //  MARK: Subscripts
 
@@ -118,9 +123,7 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
 
   public subscript(row: Index, column: Index) -> Scalar {
     get {
-      let ris = _rowIndices[_columnStarts[column]..<_columnStarts[column + 1]]
-      guard let vi = ris.firstIndex(where: { $0 == Int32(row) }) else { return 0 }
-      return _values[vi]
+      _values[LinAlg.rowColToValueIndex(_spmat, (row, column))]
     }
     set {  }
   }
@@ -141,9 +144,7 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
     }
   }
   func valueIndexToRowColumn(_ vi: Index) -> RowCol {
-    let r = _rowIndices[vi]
-    let c = _columnStarts.lastIndex(where: { c in c <= vi }) ?? 0
-    return (Int(r), c)
+    LinAlg.valueIndexToRowCol(_spmat, vi)
   }
 
   public func index(after i: Int) -> Int {
@@ -158,7 +159,7 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
 //  MARK: Manipulation
 
   public var T: Self {
-    Self()
+    Self(LinAlg.transpose(_spmat))
   }
 
   public static postfix func † (a: SparseMatrix<Scalar>) -> SparseMatrix<Scalar> {
@@ -204,39 +205,55 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
 //  MARK: Arithmetic
 
   public static func add(_ lhs: SparseMatrix<Scalar>, _ rhs: SparseMatrix<Scalar>) -> SparseMatrix<Scalar> {
-    Self()
+    Self(LinAlg.add(lhs._spmat, rhs._spmat))
   }
 
   public static func add(_ lhs: SparseMatrix<Scalar>, _ rhs: Scalar) -> SparseMatrix<Scalar> {
-    Self()
+    Self.init(
+      rowIndices: lhs._rowIndices,
+      columnStarts: lhs._columnStarts,
+      LinAlg.addScalar(lhs._values, rhs),
+      lhs.rows, lhs.cols)
   }
 
   public static func subtract(_ lhs: SparseMatrix<Scalar>, _ rhs: SparseMatrix<Scalar>) -> SparseMatrix<Scalar> {
-    Self()
+    Self(LinAlg.subtract(lhs._spmat, rhs._spmat))
   }
 
   public static func subtract(_ lhs: SparseMatrix<Scalar>, _ rhs: Scalar) -> SparseMatrix<Scalar> {
-    Self()
+    Self.init(
+      rowIndices: lhs._rowIndices,
+      columnStarts: lhs._columnStarts,
+      LinAlg.subtractScalar(lhs._values, rhs),
+      lhs.rows, lhs.cols)
   }
 
   public static func multiplyElements(_ lhs: SparseMatrix<Scalar>, _ rhs: SparseMatrix<Scalar>) -> SparseMatrix<Scalar> {
-    Self()
+    Self(LinAlg.multiplyElementwise(lhs._spmat, rhs._spmat))
   }
 
   public static func multiplyElements(_ lhs: SparseMatrix<Scalar>, _ rhs: Scalar) -> SparseMatrix<Scalar> {
-    Self()
+    Self.init(
+      rowIndices: lhs._rowIndices,
+      columnStarts: lhs._columnStarts,
+      LinAlg.multiplyScalar(lhs._values, rhs),
+      lhs.rows, lhs.cols)
   }
 
   public static func divideElements(_ lhs: SparseMatrix<Scalar>, _ rhs: SparseMatrix<Scalar>) -> SparseMatrix<Scalar> {
-    Self()
+    Self(LinAlg.divideElementwise(lhs._spmat, rhs._spmat))
   }
 
   public static func divideElements(_ lhs: SparseMatrix<Scalar>, _ rhs: Scalar) -> SparseMatrix<Scalar> {
-    Self()
+    Self.init(
+      rowIndices: lhs._rowIndices,
+      columnStarts: lhs._columnStarts,
+      LinAlg.divideScalar(lhs._values, rhs),
+      lhs.rows, lhs.cols)
   }
 
   public static func multiplyMatrix(_ lhs: SparseMatrix<Scalar>, _ rhs: SparseMatrix<Scalar>) -> SparseMatrix<Scalar> {
-    Self()
+    Self(LinAlg.multiplyMatrix(lhs._spmat, rhs._spmat))
   }
 
 
@@ -266,12 +283,7 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: AccelerateFloat
 //  MARK: Conversion
 
   public func dense() -> Matrix<Scalar> {
-    var M = Matrix<Scalar>.zeros(Int(rows), cols)
-    _values.enumerated().forEach { vi, v in
-      let rc = self.valueIndexToRowColumn(vi)
-      M[rc.r, rc.c] = v
-    }
-    return M
+    Matrix(LinAlg.CSCToDense(_spmat))
   }
 
 }

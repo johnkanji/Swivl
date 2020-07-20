@@ -8,9 +8,9 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
-public protocol SIMDMatrix: MatrixProtocol where Scalar: AccelerateNumeric {
+public protocol SIMDMatrix: MatrixProtocol where Scalar: SwivlNumeric {
   associatedtype RowVector: SIMD where RowVector.Scalar == Scalar
   associatedtype ColumnVector: SIMD where ColumnVector.Scalar == Scalar
 
@@ -28,7 +28,7 @@ public protocol SIMDMatrix: MatrixProtocol where Scalar: AccelerateNumeric {
   static prefix func - (_ a: Self) -> Self
 }
 
-extension SIMDMatrix where Scalar: AccelerateFloatingPoint {
+extension SIMDMatrix where Scalar: SwivlFloatingPoint {
 
   public var rows: Int { Self._rows }
   public var cols: Int { Self._cols }
@@ -78,7 +78,7 @@ extension SIMDMatrix where Scalar: AccelerateFloatingPoint {
   }
 
   public init(columns: [[Scalar]]) {
-    self.init(BLAS.transpose(columns.reduce([], +), (Self._cols, Self._rows)))
+    self.init(LinAlg.transpose(Mat<Scalar>(columns.reduce([], +), (Self._cols, Self._rows))))
   }
 
   public init(_ s: [Scalar]) {
@@ -91,6 +91,10 @@ extension SIMDMatrix where Scalar: AccelerateFloatingPoint {
 
   public init(flat: [Scalar], shape: RowCol) {
     self.init(flat)
+  }
+
+  init(_ a: Mat<Scalar>) {
+    self.init(a.flat)
   }
 
 

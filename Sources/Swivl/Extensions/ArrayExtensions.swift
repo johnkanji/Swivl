@@ -9,12 +9,14 @@
 
 import Foundation
 
-extension Array where Element: AdditiveArithmetic {
-  func sum() -> Element {
-    self.reduce(Element.zero, +)
+extension Array {
+
+  func any(where predicate: (Element) throws -> Bool) rethrows -> Bool {
+    try self.first(where: predicate) != nil
   }
 
-  func cumsum() -> Self {
-    self.reduce([Element.zero]) { acc, v in acc + [acc.last! + v] }
+  func find(where predicate: (Element) throws -> Bool) rethrows -> IndexSet {
+    try IndexSet(self.enumerated().filter({ try predicate($0.1) }).map({ $0.0 }))
   }
+
 }

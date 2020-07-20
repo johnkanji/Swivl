@@ -13,12 +13,13 @@ let package = Package(
     .library(name: "Swivl", targets: ["Swivl"]),
   ],
   targets: [
-    .systemLibrary(name: "CXSparse", path: "External/CXSparse"),
+//    .systemLibrary(name: "CXSparse", path: "External/CXSparse"),
     .systemLibrary(name: "SuperLU", path: "External/SuperLU"),
     .systemLibrary(name: "OSQP", path: "External/OSQP"),
+
     .target(
-      name: "BLAS",
-      dependencies: ["SuperLU", "OSQP", "CXSparse"],
+      name: "LinearAlgebra",
+      dependencies: ["SuperLU", "OSQP"],
       cSettings: [.unsafeFlags(["-IExternal"])],
       linkerSettings: [.unsafeFlags(["-LExternal/lib"])]
     ),
@@ -27,10 +28,10 @@ let package = Package(
       dependencies: ["Swivl"]),
     .target(
       name: "Swivl",
-      dependencies: ["BLAS"]),
+      dependencies: ["LinearAlgebra"]),
     .target(
       name:"Test",
-      dependencies: ["Swivl", "BLAS"]),
+      dependencies: ["Swivl"]),
     
 //    .testTarget(
 //      name: "SwigglTests",

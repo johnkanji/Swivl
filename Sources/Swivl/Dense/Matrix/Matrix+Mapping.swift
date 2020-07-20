@@ -8,17 +8,18 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
 extension Matrix {
   
   public func rowwise<R>(_ closure: (Vector<Scalar>) -> Vector<R>) -> Matrix<R> {
-    var out = [[R]](repeating: [], count: shape.r)
+    var vs = [[R]](repeating: [], count: shape.r)
     DispatchQueue.concurrentPerform(iterations: shape.r) { r in
-      out[r] = closure(self[r,...]).array
+      vs[r] = closure(self[r,...]).array
     }
-    assert(out.allSatisfy{ $0.count == shape.c })
-    return Matrix<R>(flat: BLAS.vcat(out, shapes: [RowCol](repeating: (1,shape.c), count: shape.r)), shape: shape)
+    assert(vs.allSatisfy{ $0.count == shape.c })
+    let shapes = [RowCol](repeating: (1, shape.c), count: shape.r)
+    return Matrix<R>(LinAlg.vcat(Array(zip(vs, shapes))))
   }
   
   public func rowwise<R>(_ closure: (Vector<Scalar>) -> R) -> Vector<R> {
@@ -30,12 +31,13 @@ extension Matrix {
   }
   
   public func colwise<R>(_ closure: (Vector<Scalar>) -> Vector<R>) -> Matrix<R> {
-    var out = [[R]](repeating: [], count: shape.c)
+    var vs = [[R]](repeating: [], count: shape.c)
     DispatchQueue.concurrentPerform(iterations: shape.c) { c in
-      out[c] = closure(self[...,c]).array
+      vs[c] = closure(self[...,c]).array
     }
-    assert(out.allSatisfy{ $0.count == shape.r })
-    return Matrix<R>(flat: BLAS.hcat(out, shapes: [RowCol](repeating: (shape.r,1), count: shape.c)), shape: shape)
+    assert(vs.allSatisfy{ $0.count == shape.r })
+    let shapes = [RowCol](repeating: (shape.r,1), count: shape.c)
+    return Matrix<R>(LinAlg.hcat(Array(zip(vs, shapes))))
   }
   
   public func colwise<R>(_ closure: (Vector<Scalar>) -> R) -> Vector<R> {
@@ -55,11 +57,11 @@ extension Matrix {
     self.rowwise({ $0.reversed })
   }
   
-  public func rowNormalized() -> Self where Scalar: AccelerateFloatingPoint {
+  public func rowNormalized() -> Self where Scalar: SwivlFloatingPoint {
     self.rowwise({ $0 / $0.length })
   }
   
-  public func rowLengths() -> Vector<Scalar> where Scalar: AccelerateFloatingPoint {
+  public func rowLengths() -> Vector<Scalar> where Scalar: SwivlFloatingPoint {
     self.rowwise({ $0.length })
   }
   

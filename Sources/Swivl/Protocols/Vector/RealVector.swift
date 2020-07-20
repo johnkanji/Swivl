@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
 public protocol RealVector: VectorProtocol {
 

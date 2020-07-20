@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
 
 public typealias VectorXd = Vector<Double>
@@ -16,11 +16,11 @@ public typealias VectorXd = Vector<Double>
 extension VectorXd {
   
   public func float() -> VectorXf {
-    VectorXf(BLAS.toFloat(array))
+    VectorXf(LinAlg.toFloat(array))
   }
   
   public func integer(roundingMode: RoundingMode = .towardNearestInteger) -> VectorXi {
-    VectorXi(BLAS.toInteger(array, roundingMode: roundingMode))
+    VectorXi(LinAlg.toInteger(array, roundingMode: roundingMode))
   }
   
 }
@@ -31,11 +31,11 @@ public typealias VectorXf = Vector<Float>
 extension VectorXf {
   
   public func double() -> VectorXd {
-    VectorXd(BLAS.toDouble(array))
+    VectorXd(LinAlg.toDouble(array))
   }
   
   public func integer(roundingMode: RoundingMode = .towardNearestInteger) -> VectorXi {
-    VectorXi(BLAS.toInteger(array, roundingMode: roundingMode))
+    VectorXi(LinAlg.toInteger(array, roundingMode: roundingMode))
   }
   
 }
@@ -46,11 +46,11 @@ public typealias VectorXi = Vector<Int32>
 extension VectorXi {
   
   public func float() -> VectorXf {
-    VectorXf(BLAS.toFloat(array))
+    VectorXf(LinAlg.toFloat(array))
   }
   
   public func double() -> VectorXd {
-    VectorXd(BLAS.toDouble(array))
+    VectorXd(LinAlg.toDouble(array))
   }
   
   public var length: Double {

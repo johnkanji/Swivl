@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
 extension Matrix: Equatable {
   
@@ -17,7 +17,7 @@ extension Matrix: Equatable {
     lhs.shape == rhs.shape &&
     lhs.flat == rhs.flat
   }
-  public static func == (lhs: Self, rhs: Self) -> Bool where Scalar: AccelerateFloatingPoint {
+  public static func == (lhs: Self, rhs: Self) -> Bool where Scalar: SwivlFloatingPoint {
     lhs.layout == rhs.layout &&
     lhs.shape == rhs.shape &&
     zip(lhs._flat, rhs._flat).allSatisfy { $0 ==~ $1 }
@@ -29,17 +29,41 @@ extension Matrix: Equatable {
   
 }
 
-extension Matrix: CustomStringConvertible where Scalar: AccelerateNumeric {
+extension Matrix: CustomStringConvertible where Scalar: SwivlNumeric {
+
+  private func hasFractional() -> Bool {
+    if Scalar.self is Double.Type {
+      return (_flat as! [Double]).reduce(true, { acc, v in acc && floor(v) !=~ v })
+    } else if Scalar.self is Float.Type {
+      return (_flat as! [Float]).reduce(true, { acc, v in acc && floor(v) ==~ v })
+    } else {
+      return false
+    }
+  }
+
+  private func formatWidth() -> Int {
+    if self.hasFractional() {
+      return 6
+    } else {
+      guard let m = _flat.max() else { return 1 }
+      if m < 1 { return 1 }
+      let n = Self.toNSNumber(m)
+      return Int(log10(Double(truncating: n))) + 2
+    }
+  }
+
   var formatter: NumberFormatter {
     let numberFormatter = NumberFormatter()
     numberFormatter.usesSignificantDigits = true
-    numberFormatter.formatWidth = 4
+    numberFormatter.maximumSignificantDigits = 4
+    numberFormatter.minimumSignificantDigits = hasFractional() ? 4 : 1
+    numberFormatter.formatWidth = formatWidth()
     numberFormatter.paddingPosition = .beforePrefix
     numberFormatter.paddingCharacter = " "
     return numberFormatter
   }
   
-  private static func toNSNumber<N>(_ value: N) -> NSNumber where N: AccelerateNumeric {
+  static func toNSNumber<N>(_ value: N) -> NSNumber where N: SwivlNumeric {
     if N.self is Double.Type { return NSNumber(value: value as! Double) }
     if N.self is Float.Type { return NSNumber(value: value as! Float) }
     if N.self is Int32.Type { return NSNumber(value: value as! Int32) }
@@ -49,10 +73,9 @@ extension Matrix: CustomStringConvertible where Scalar: AccelerateNumeric {
   
   public var description: String {
     let formatter = self.formatter
-    formatter.formatWidth = Int(log10(Double(truncating: Self.toNSNumber(flat.max()!)))) + 1
     return "\(type(of: self)) \(shape.r)x\(shape.c)\n" +
     (0..<rows).map { r in
-      "\t[ " + BLAS.row(flat, shape, r).map { x in formatter.string(from: Self.toNSNumber(x))! }
+      "\t[ " + LinAlg.row(_mat, r).map { x in formatter.string(from: Self.toNSNumber(x))! }
         .joined(separator: ", ") +
       " ]"
     }.joined(separator: "\n")
@@ -63,11 +86,7 @@ extension Matrix: ExpressibleByArrayLiteral {
   public typealias ArrayLiteralElement = Self
 
   public init(arrayLiteral elements: Self...) {
-    let shapes = elements.map(\.shape)
-    let ms = elements.map(\.flat)
-    self._flat = BLAS.hcat(ms, shapes: shapes)
-    self._rows = shapes[0].r
-    self._cols = shapes.map(\.c).sum()
+    self.init(LinAlg.hcat(elements.map(\._mat)))
   }
 }
 

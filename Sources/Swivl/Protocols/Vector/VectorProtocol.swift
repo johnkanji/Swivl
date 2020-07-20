@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
 public protocol VectorProtocol: Collection, Equatable where Element: Numeric {
   typealias Scalar = Element

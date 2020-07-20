@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
 protocol RealMatrix: MatrixProtocol where Scalar: BinaryFloatingPoint {
 
@@ -20,7 +20,7 @@ protocol RealMatrix: MatrixProtocol where Scalar: BinaryFloatingPoint {
 
   var rank: Int { get }
 
-  var isDefinite: Bool { get }
+  mutating func isDefinite() -> Bool
 
 
 //  MARK: Unary Operators

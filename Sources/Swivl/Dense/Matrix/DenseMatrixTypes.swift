@@ -8,7 +8,7 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
 
 // MARK: MatrixXd
@@ -18,11 +18,11 @@ public typealias MatrixXd = Matrix<Double>
 extension MatrixXd {
 
   public func float() -> MatrixXf {
-    MatrixXf(flat: BLAS.toFloat(_flat), shape: shape)
+    MatrixXf(flat: LinAlg.toFloat(_flat), shape: shape)
   }
   
   public func integer(roundingMode: RoundingMode = .towardNearestInteger) -> MatrixXi {
-    MatrixXi(flat: BLAS.toInteger(_flat, roundingMode: roundingMode), shape: shape)
+    MatrixXi(flat: LinAlg.toInteger(_flat, roundingMode: roundingMode), shape: shape)
   }
 }
 
@@ -34,11 +34,11 @@ public typealias MatrixXf = Matrix<Float>
 extension MatrixXf {
 
   public func double() -> MatrixXd {
-    MatrixXd(flat: BLAS.toDouble(_flat), shape: shape)
+    MatrixXd(flat: LinAlg.toDouble(_flat), shape: shape)
   }
   
   public func integer(roundingMode: RoundingMode = .towardNearestInteger) -> MatrixXi {
-    MatrixXi(flat: BLAS.toInteger(_flat, roundingMode: roundingMode), shape: shape)
+    MatrixXi(flat: LinAlg.toInteger(_flat, roundingMode: roundingMode), shape: shape)
   }
 }
 
@@ -50,11 +50,11 @@ public typealias MatrixXi = Matrix<Int32>
 extension MatrixXi {
   
   public func float() -> MatrixXf {
-    MatrixXf(flat: BLAS.toFloat(_flat), shape: shape)
+    MatrixXf(flat: LinAlg.toFloat(_flat), shape: shape)
   }
   
   public func double() -> MatrixXd {
-    MatrixXd(flat: BLAS.toDouble(_flat), shape: shape)
+    MatrixXd(flat: LinAlg.toDouble(_flat), shape: shape)
   }
   
 }

@@ -8,18 +8,18 @@
 //
 
 import Foundation
-import BLAS
+import LinearAlgebra
 
-extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
+extension Matrix: RealMatrix where Scalar: SwivlFloatingPoint {
 
 //  MARK: Matrix Properties
 
   public var det: Scalar {
-    BLAS.det(_flat, shape)
+    LinAlg.det(_mat)
   }
 
   public var cond: Scalar {
-    (try? BLAS.cond(_flat, shape)) ?? Scalar.nan
+    (try? LinAlg.cond(_mat)) ?? Scalar.nan
   }
 
   public var rank: Int {
@@ -27,8 +27,19 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
     return U.rowwise { $0.sum() }.array.filter { Swift.abs($0) > Scalar.approximateEqualityTolerance }.count
   }
 
-  public var isDefinite: Bool {
-    return (try? self.chol()) != nil
+  public mutating func isDefinite() -> Bool {
+    guard let definite = _definite else {
+      _definite = (try? self.chol()) != nil
+      return _definite!
+    }
+    return definite
+  }
+
+
+//  MARK: Initializers:
+
+  public init(_ m: SparseMatrix<Scalar>) {
+    self.init(LinAlg.CSCToDense(m._spmat))
   }
 
 
@@ -36,21 +47,21 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
 
   // Override
   public static func negate(_ lhs: Self) -> Self {
-    Self(flat: BLAS.negate(lhs._flat), shape: lhs.shape)
+    Self(flat: LinAlg.negate(lhs._flat), shape: lhs.shape)
   }
 
   public func mean() -> Scalar {
-    BLAS.mean(_flat)
+    LinAlg.mean(_flat)
   }
 
   // Override
   public func square() -> Self {
-    Self(flat: BLAS.square(_flat), shape: shape)
+    Self(flat: LinAlg.square(_flat), shape: shape)
   }
 
 // TODO: STUB
   public func inv() -> Self {
-    Self(flat: BLAS.inverse(_flat, shape), shape: shape)
+    Self(LinAlg.inverse(_mat))
   }
 
   // TODO: STUB
@@ -64,33 +75,45 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
 
   public static func multiplyElements(_ lhs: Self, _ rhs: Self) -> Self {
     precondition(lhs.shape == rhs.shape)
-    return Self(flat: BLAS.multiplyElementwise(lhs._flat, rhs._flat), shape: lhs.shape)
+    return Self(flat: LinAlg.multiplyElementwise(lhs._flat, rhs._flat), shape: lhs.shape)
   }
   public static func multiplyElements(_ lhs: Self, _ rhs: Element) -> Self {
-    return Self(flat: BLAS.multiplyScalar(lhs._flat, rhs), shape: lhs.shape)
+    return Self(flat: LinAlg.multiplyScalar(lhs._flat, rhs), shape: lhs.shape)
   }
 
   public static func multiplyMatrix(_ lhs: Self, _ rhs: Self) -> Self {
-    let (c, shapeC) = BLAS.multiplyMatrix(lhs._flat, lhs.shape, rhs._flat, rhs.shape)
-    return Self(flat: c, shape: shapeC)
+    return Self(LinAlg.multiplyMatrix(lhs._mat, rhs._mat))
+  }
+
+  public static func multiplyMatrixVector(_ lhs: Self, _ rhs: Vector<Scalar>) -> Vector<Scalar> {
+    Vector(column: LinAlg.multiplyMatrixVector(lhs._mat, rhs.array))
+  }
+  public static func multiplyMatrixVector(_ lhs: Vector<Scalar>, _ rhs: Self) -> Vector<Scalar> {
+    Vector(row: LinAlg.multiplyMatrixVector(rhs._mat, lhs.array))
+  }
+  public static func * (_ lhs: Self, _ rhs: Vector<Scalar>) -> Vector<Scalar> {
+    Vector(column: LinAlg.multiplyMatrixVector(lhs._mat, rhs.array))
+  }
+  public static func * (_ lhs: Vector<Scalar>, _ rhs: Self) -> Vector<Scalar> {
+    Vector(row: LinAlg.multiplyMatrixVector(rhs._mat, lhs.array))
   }
 
 
   //  MARK: Matrix Creation
 
   public static func rand(_ rows: Int, _ cols: Int) -> Self {
-    Self(flat: BLAS.rand(rows*cols), shape: (rows, cols))
+    Self(flat: LinAlg.rand(rows*cols), shape: (rows, cols))
   }
 
   public static func randn(_ rows: Int, _ cols: Int) -> Self {
-    Self(flat: BLAS.randn(rows*cols), shape: (rows, cols))
+    Self(flat: LinAlg.randn(rows*cols), shape: (rows, cols))
   }
 
 
   //  MARK: Decompositions
 
   public func chol(_ triangle: TriangularType = .upper) throws -> Self {
-    try Self(flat: BLAS.chol(_flat, shape, triangle: triangle), shape: shape)
+    try Self(LinAlg.chol(_mat, triangle: triangle))
   }
 
   public func LU() -> (L: Self, U: Self) {
@@ -101,26 +124,25 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
   public func LU(_ output: LUOutput) -> (L: Self, U: Self, P: Self?, Q: Self?) {
     switch output {
     case .LU:
-      let ((L, shapeL), (U, shapeU), _, _) = BLAS.LU(_flat, shape, output: output)
-      return (L: Self(flat: L, shape: shapeL), U: Self(flat: U, shape: shapeU), nil, nil)
+      let (L, U, _, _) = LinAlg.LU(_mat, output: output)
+      return (L: Self(L), U: Self(U), nil, nil)
     case .LUP:
-      let ((L, shapeL), (U, shapeU), P, _) = BLAS.LU(_flat, shape, output: output)
-      return (L: Self(flat: L, shape: shapeL), U: Self(flat: U, shape: shapeU), P: Self(flat: P!, shape: shape), nil)
+      let (L, U, P, _) = LinAlg.LU(_mat, output: output)
+      return (L: Self(L), U: Self(U), P: Self(P!), nil)
     case .LUPQ:
-      let ((L, shapeL), (U, shapeU), P, Q) = BLAS.LU(_flat, shape, output: output)
-      return (L: Self(flat: L, shape: shapeL), U: Self(flat: U, shape: shapeU),
-              P: Self(flat: P!, shape: shape), Q: Self(flat: Q!, shape: shape))
+      let (L, U, P, Q) = LinAlg.LU(_mat, output: output)
+      return (L: Self(L), U: Self(U), P: Self(P!), Q: Self(Q!))
     }
   }
 
   public func LDL(_ triangle: TriangularType) -> (L: Self, D: Self) {
-    let (L, D) = BLAS.LDL(_flat, shape)
-    return (Self(flat: L, shape: shape), Self(flat: D, shape: shape))
+    let (L, D) = LinAlg.LDL(_mat)
+    return (Self(L), Self(D))
   }
 
   public func QR() -> (Q: Self, R: Self) {
-    let (Q, R) = BLAS.QR(_flat, shape)
-    return (Self(flat: Q, shape: (rows, rows)), Self(flat: R, shape: shape))
+    let (Q, R) = LinAlg.QR(_mat)
+    return (Self(Q), Self(R))
   }
 
   public func eig<VR>(vectors: SingularVectorOutput = .none) -> (values: VR, leftVectors: Self?, rightVectors: Self?)
@@ -128,13 +150,20 @@ extension Matrix: RealMatrix where Scalar: AccelerateFloatingPoint {
     let left = vectors == .left || vectors == .both
     let right = vectors == .right || vectors == .both
 
-    let (V, DL, DR) = try! BLAS.eig(_flat, shape, vectors: vectors)
-    return (VR(row: V), left ? Self(flat: DL!, shape: shape) : nil, right ? Self(flat: DR!, shape: shape) : nil)
+    let (V, DL, DR) = try! LinAlg.eig(_mat, vectors: vectors)
+    return (VR(row: V), left ? Self(DL!) : nil, right ? Self(DR!) : nil)
   }
 
   public func SVD<VR>(vectors: SingularVectorOutput = .none) -> (values: VR, leftVectors: Self?, rightVectors: Self?)
   where VR : VectorProtocol, VR.Scalar == Scalar {
     (VR(), nil, nil)
+  }
+
+
+//  MARK: Conversions
+
+  public func sparse() -> SparseMatrix<Scalar> {
+    SparseMatrix(self)
   }
   
 }

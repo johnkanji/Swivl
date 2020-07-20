@@ -1,8 +1,16 @@
+//  MatrixTypes.swift
 //
-//  File.swift
-//  
+//  Copyright (c) 2020 John Kanji
 //
-//  Created by John Kanji on 2020-07-16.
+//  This Source Code Form is subject to the terms of the Mozilla Public
+//  License, v. 2.0. If a copy of the MPL was not distributed with this
+//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 
 import Foundation
+import LinearAlgebra
+
+extension Matrix where Scalar == Double {
+
+
+}
