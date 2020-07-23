@@ -72,7 +72,7 @@ extension Matrix {
   
 // MARK: [Index]/[Index]
   public subscript(_ rows: Vector<Index>, _ cols: Vector<Index>) -> Self {
-    let indices = rows.map { r in cols.map { c in RowCol(r, c) } }.reduce([], +).map(rowColumnToFlatIndex)
+    let indices = rows.map { r in cols.map { c in RowCol(r, c) } }.chained().map(rowColumnToFlatIndex)
     return Self(flat: LinAlg.gather(flat, indices), shape: (rows.count, cols.count))
   }
   

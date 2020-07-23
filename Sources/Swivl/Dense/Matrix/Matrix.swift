@@ -75,17 +75,12 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
     
     self._rows = rows.count
     self._cols = rows.first!.count
-    self._flat = rows.reduce([], +)
+    self._flat = rows.chained()
   }
   public init(_ rows: [[Scalar]]) { self.init(rows: rows) }
   public init(columns: [[Scalar]]) {
-    precondition(
-      !columns.isEmpty && !columns.first!.isEmpty &&
-      columns.allSatisfy { $0.count == columns.first!.count })
-    
-    self._cols = columns.count
-    self._rows = columns.first!.count
-    self._flat = columns.reduce([], +)
+    self.init(rows: columns)
+    self.transpose()
   }
   public init(flat: [Scalar], shape: RowCol) {
     self._flat = flat

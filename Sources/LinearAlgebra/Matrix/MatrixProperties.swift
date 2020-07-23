@@ -34,7 +34,7 @@ extension LinAlg {
 
 
   public static func trace<T>(_ a: Mat<T>) -> T where T: SwivlNumeric {
-    return diag(a).prod()
+    return diag(a).sum()
   }
 
 

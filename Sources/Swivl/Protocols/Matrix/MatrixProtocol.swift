@@ -113,6 +113,8 @@ public protocol MatrixProtocol: Collection, Equatable where Element: Numeric {
 
 extension MatrixProtocol {
 
+  public var count: Int { rows * cols }
+
 //  MARK: Operators
 
   public static func + (_ lhs: Self, _ rhs: Self) -> Self {

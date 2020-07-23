@@ -74,11 +74,11 @@ extension SIMDMatrix where Scalar: SwivlFloatingPoint {
   }
 
   public init(_ rows: [[Scalar]]) {
-    self.init(rows.reduce([], +))
+    self.init(rows.chained())
   }
 
   public init(columns: [[Scalar]]) {
-    self.init(LinAlg.transpose(Mat<Scalar>(columns.reduce([], +), (Self._cols, Self._rows))))
+    self.init(LinAlg.transpose(Mat<Scalar>(columns.chained(), (Self._cols, Self._rows))))
   }
 
   public init(_ s: [Scalar]) {
@@ -254,7 +254,7 @@ extension SIMDMatrix where Scalar: SwivlFloatingPoint {
       }
       vs.append(v)
     }
-    return vs.reduce([], +)
+    return vs.chained()
   }
 
 }

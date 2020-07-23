@@ -1,5 +1,0 @@
-module CXSparse {
-  header "include/cs.h"
-  link "cxsparse"
-  export *
-}

@@ -28,7 +28,18 @@ public extension Array {
       try ptr.withMemoryRebound(to: type, body)
     }
   }
+
+  func anySatisfy(_ predicate: (Element) throws -> Bool) rethrows -> Bool {
+    for el in self {
+      if try predicate(el) {
+        return true
+      }
+    }
+    return false
+  }
+
 }
+
 
 public extension Array where Element: AdditiveArithmetic {
 
@@ -37,10 +48,13 @@ public extension Array where Element: AdditiveArithmetic {
   }
 
   func cumsum() -> Self {
-    self.reduce([Element.zero]) { acc, v in acc + [acc.last! + v] }
+    var out = [Element.zero]
+    out.reserveCapacity(self.count + 1)
+    return self.reduce(into: out) { acc, v in acc.append(acc.last! + v) }
   }
 
 }
+
 
 public extension Array where Element: Numeric {
 
@@ -48,4 +62,31 @@ public extension Array where Element: Numeric {
     self.reduce(1, *)
   }
 
+}
+
+
+public extension Array where Element: Collection {
+
+  func chained() -> Array<Element.Element> {
+    var out: [Element.Element] = []
+    out.reserveCapacity(self.map(\.count).sum())
+    return self.reduce(into: out, { acc, v in acc.append(contentsOf: v) })
+  }
+
+}
+
+
+func binarySearch<R>(_ sortedArray: R, for elem: R.Element) -> Int?
+where R: RandomAccessCollection, R.Index == Int, R.Element: Comparable & Equatable {
+  let middle = (sortedArray.startIndex + sortedArray.endIndex) / 2
+  if sortedArray.count == 1 {
+    return sortedArray.first! == elem ? sortedArray.startIndex : nil
+  }
+  if elem == sortedArray[middle] {
+    return middle
+  } else if elem < sortedArray[middle] {
+    return binarySearch(sortedArray[..<middle], for: elem)
+  } else {
+    return binarySearch(sortedArray[middle...], for: elem)
+  }
 }

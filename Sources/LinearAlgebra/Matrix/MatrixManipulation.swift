@@ -180,7 +180,7 @@ extension LinAlg {
   public static func vcat<T>(_ ms: [Mat<T>]) -> Mat<T>
   where T: SwivlNumeric {
     precondition(ms.allSatisfy { m in m.shape.c == ms[0].shape.c })
-    return (ms.map(\.flat).reduce([], +), (ms.map({ $0.shape.r }).sum(), ms[0].shape.c))
+    return (ms.map(\.flat).chained(), (ms.map({ $0.shape.r }).sum(), ms[0].shape.c))
   }
   public static func vcat<T>(_ a: Mat<T>, _ b: Mat<T>) -> Mat<T>
   where T: SwivlNumeric {
@@ -193,7 +193,7 @@ extension LinAlg {
     if tri == .upper { k -= 1 }
     let zs = Array<Int>(Swift.max(-k,0)..<shape.r)
       .map { r in Array<Int>(r*shape.c...r*shape.c + r + k) }
-      .reduce([], +)
+      .chained()
     return zs
   }
   

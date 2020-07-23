@@ -19,12 +19,6 @@ public protocol MatrixFactor {
 }
 
 public class DenseMatrixFactor<Scalar: SwivlFloatingPoint>: MatrixFactor {
-  var L: Matrix<Scalar>? = nil
-  var U: Matrix<Scalar>? = nil
-  var D: Matrix<Scalar>? = nil
-  var P: Matrix<Scalar>? = nil
-  var Q: Matrix<Scalar>? = nil
-  var R: Matrix<Scalar>? = nil
 
   public var solve: (Matrix<Scalar>) -> Matrix<Scalar> = { _ in Matrix() }
 
@@ -32,7 +26,8 @@ public class DenseMatrixFactor<Scalar: SwivlFloatingPoint>: MatrixFactor {
 
 }
 
-public class CholeskyFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
+
+class CholeskyFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
   private var A: [Scalar] = []
   private var tau: [Scalar] = []
   private var shape: RowCol
@@ -51,7 +46,7 @@ public class CholeskyFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scala
 }
 
 
-public class LDLFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
+class LDLFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
   private var A: [Scalar] = []
   private var tau: [Scalar] = []
   private var shape: RowCol
@@ -70,7 +65,7 @@ public class LDLFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
 }
 
 
-public class LUFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
+class LUFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
   private var A: [Scalar] = []
   private var tau: [Scalar] = []
   private var shape: RowCol
@@ -89,7 +84,7 @@ public class LUFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
 }
 
 
-public class QRFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
+class QRFactor<Scalar: SwivlFloatingPoint>: DenseMatrixFactor<Scalar> {
   private var A: [Scalar] = []
   private var tau: [Scalar] = []
   private var shape: RowCol

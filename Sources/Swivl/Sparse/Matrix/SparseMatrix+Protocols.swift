@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import LinearAlgebra
 
 extension SparseMatrix: CustomStringConvertible {
   public var description: String {
@@ -19,5 +20,14 @@ extension SparseMatrix: CustomStringConvertible {
       return "\t(\(r), \(c))\t\t\(_values[i])"
     }.joined(separator: "\n")
     return "\(type(of: self)) \(shape.r)x\(shape.c)\n" + matString
+  }
+}
+
+
+extension SparseMatrix: ExpressibleByArrayLiteral {
+  public typealias ArrayLiteralElement = Self
+
+  public init(arrayLiteral elements: Self...) {
+    self.init(LinAlg.hcat(elements.map(\._spmat)))
   }
 }

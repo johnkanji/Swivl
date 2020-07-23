@@ -22,9 +22,9 @@ extension LinAlg {
     return r * a.shape.c + c
   }
 
-  public static func rowColToValueIndex<T>(_ a: SpMat<T>, _ i: RowCol) -> Int where T: SwivlNumeric {
+  public static func rowColToValueIndex<T>(_ a: SpMat<T>, _ i: RowCol) -> Int? where T: SwivlNumeric {
     let ris = a.ri[a.cs[i.c]..<a.cs[i.c + 1]]
-    guard let vi = ris.firstIndex(where: { $0 == Int32(i.r) }) else { return 0 }
+    guard let vi = ris.firstIndex(where: { $0 == Int32(i.r) }) else { return nil }
     return vi
   }
 

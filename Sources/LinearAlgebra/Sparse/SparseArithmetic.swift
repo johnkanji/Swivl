@@ -54,8 +54,18 @@ extension LinAlg {
     return (ri, cs, v, a.shape)
   }
 
-  public static func divideElementwise<T>(_ a: SpMat<T>, _ b: SpMat<T>) -> SpMat<T> where T: SwivlFloatingPoint {
+  public static func divideElementwise<T>(_ a: SpMat<T>, _ b: SpMat<T>) -> SpMat<T> where T: SwivlNumeric {
     precondition(a.shape == b.shape)
+
+    func div(_ lhs: T, _ rhs: T) -> T {
+      if T.self is Double.Type {
+        return ((lhs as! Double) / (rhs as! Double)) as! T
+      } else if T.self is Float.Type {
+        return ((lhs as! Float) / (rhs as! Float)) as! T
+      } else {
+        return ((lhs as! Int32) / (rhs as! Int32)) as! T
+      }
+    }
 
     var ri: [Int32] = []
     var cs: [Int] = [0]
@@ -67,7 +77,7 @@ extension LinAlg {
       assert(Set(a.ri[rngA]).subtracting(b.ri[rngB]).count == 0, "Division by zero")
       var rv = [Int32:T](uniqueKeysWithValues: zip(a.ri[rngA], a.v[rngA]))
       zip(b.ri[rngB], b.v[rngB]).forEach { i, v in
-        rv[i] = rv[i, default: 0]/v
+        rv[i] = div(rv[i, default: 0], v)
       }
       ri.append(contentsOf: rv.map(\.key))
       v.append(contentsOf: rv.map(\.value))

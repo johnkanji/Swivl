@@ -11,7 +11,7 @@ import Foundation
 import Accelerate
 import LinearAlgebra
 
-public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPoint {
+public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
   public typealias Element = Scalar
   public typealias Index = Int
 
@@ -27,6 +27,7 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPo
   public var rows: Int { _rows }
   public var cols: Int { _cols }
   public var shape: RowCol { RowCol(rows, cols) }
+  public var nonZeros: Int { _values.count }
 
   public var _spmat: SpMat<Scalar> { SpMat<Scalar>(ri: _rowIndices, cs: _columnStarts, v: _values, shape: shape) }
 
@@ -34,7 +35,7 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPo
 //  MARK: Matrix Properties
 
   public var isSymmetric: Bool {
-    false
+    self == self†
   }
 
   public var isLowerTringular: Bool {
@@ -46,11 +47,12 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPo
   }
 
   public var isDiagonal: Bool {
-    false
+    let diagonal: Vector<Scalar> = self.diag()
+    return self == diagonal.diag()
   }
 
   public var trace: Scalar {
-    0
+    LinAlg.diag(_spmat).sum()
   }
 
   public var norm: Scalar {
@@ -95,15 +97,24 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPo
   }
 
   public init(_ rows: [[Scalar]]) {
-    self.init()
+    precondition(
+      !rows.isEmpty && !rows.first!.isEmpty &&
+      rows.allSatisfy { $0.count == rows.first!.count })
+    let shape = (rows.count, rows[0].count)
+    self.init(flat: rows.chained(), shape: shape)
   }
 
   public init(columns: [[Scalar]]) {
-    self.init()
+    precondition(
+      !columns.isEmpty && !columns.first!.isEmpty &&
+      columns.allSatisfy { $0.count == columns.first!.count })
+    let shape = (columns.count, columns[0].count)
+    let mat = LinAlg.transpose((columns.chained(), shape))
+    self.init(flat: mat.flat, shape: mat.shape)
   }
 
   public init(flat: [Scalar], shape: RowCol) {
-    self.init()
+    self.init(LinAlg.denseToCSC((flat, shape)))
   }
 
   public init(_ a: SpMat<Scalar>) {
@@ -123,9 +134,10 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPo
 
   public subscript(row: Index, column: Index) -> Scalar {
     get {
-      _values[LinAlg.rowColToValueIndex(_spmat, (row, column))]
+      guard let vi = LinAlg.rowColToValueIndex(_spmat, (row, column)) else { return 0 }
+      return _values[vi]
     }
-    set {  }
+    set { LinAlg.insert(&_rowIndices, &_columnStarts, &_values, shape, (row, column), newValue) }
   }
 
   public func rowColumnToFlatIndex(_ i: RowCol) -> Index {
@@ -166,8 +178,32 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPo
     a.T
   }
 
+  public mutating func transpose() {
+    let spmat = LinAlg.transpose(_spmat)
+    self._rowIndices = spmat.ri
+    self._columnStarts = spmat.cs
+    self._values = spmat.v
+    self._rows = spmat.shape.r
+    self._cols = spmat.shape.c
+  }
+
+  public static func hcat(_ matrices: Self...) -> Self {
+    return Self.init(LinAlg.hcat(matrices.map(\._spmat)))
+  }
+
+  public static func vcat(_ matrices: Self...) -> Self {
+    return Self.init(LinAlg.vcat(matrices.map(\._spmat)))
+  }
+
+  public static func || (_ lhs: Self, _ rhs: Self) -> Self {
+    vcat(lhs, rhs)
+  }
+
   public func diag<V>() -> V where V : VectorProtocol, Self.Scalar == V.Scalar {
-    V()
+    V(LinAlg.diag(_spmat))
+  }
+  public func diag() -> Vector<Scalar> {
+    Vector(LinAlg.diag(_spmat))
   }
 
   public func tri(_ triangle: TriangularType, diagonal: Int) -> SparseMatrix<Scalar> {
@@ -178,27 +214,39 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPo
 //  MARK: Unary Operators
 
   public static func negate(_ lhs: SparseMatrix<Scalar>) -> SparseMatrix<Scalar> {
-    lhs
+    var out = Self(lhs._spmat)
+    out._values = lhs._values.map { -$0 }
+    return out
   }
 
   public func abs() -> SparseMatrix<Scalar> {
-    self
+    var out = Self(_spmat)
+    out._values = LinAlg.abs(_values)
+    return out
   }
 
   public func max() -> (Scalar, RowCol)? {
-    nil
+    guard let m = _values.max() else { return nil }
+    return (m, valueIndexToRowColumn(_values.firstIndex(of: m)!))
   }
 
   public func min() -> (Scalar, RowCol)? {
-    nil
+    guard let m = _values.min() else { return nil }
+    return (m, valueIndexToRowColumn(_values.firstIndex(of: m)!))
   }
 
   public func sum() -> Scalar {
-    0
+    _values.sum()
+  }
+
+  public func mean<R>() -> R where R: SwivlFloatingPoint {
+    self.to(type: R.self).mean()
   }
 
   public func square() -> SparseMatrix<Scalar> {
-    self
+    var out = Self(_spmat)
+    out._values = _values.map { $0*$0 }
+    return out
   }
 
 
@@ -236,7 +284,7 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPo
     Self.init(
       rowIndices: lhs._rowIndices,
       columnStarts: lhs._columnStarts,
-      LinAlg.multiplyScalar(lhs._values, rhs),
+      lhs._values.map { $0 * rhs },
       lhs.rows, lhs.cols)
   }
 
@@ -264,13 +312,15 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPo
   }
 
   public static func ones(_ rows: Int, _ cols: Int) -> SparseMatrix<Scalar> {
-    Self()
+    Self(LinAlg.sparseOnes(rows, cols))
   }
 
+//  TODO
   public static func rand(_ rows: Int, _ cols: Int) -> SparseMatrix<Scalar> {
     Self()
   }
 
+//  TOOD
   public static func randn(_ rows: Int, _ cols: Int) -> SparseMatrix<Scalar> {
     Self()
   }
@@ -284,6 +334,19 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlFloatingPo
 
   public func dense() -> Matrix<Scalar> {
     Matrix(LinAlg.CSCToDense(_spmat))
+  }
+
+  public func vector<V: VectorProtocol>() -> V where V.Scalar == Scalar {
+    precondition(rows == 1 || cols == 1)
+    if rows == 1 {
+      return V(row: LinAlg.row(_spmat, 0))
+    } else {
+      return V(column: LinAlg.col(_spmat, 0))
+    }
+  }
+
+  public func to<U>(type: U.Type) -> SparseMatrix<U> where U: SwivlNumeric {
+    SparseMatrix<U>(rowIndices: _rowIndices, columnStarts: _columnStarts, LinAlg.toType(_values, type), rows, cols)
   }
 
 }

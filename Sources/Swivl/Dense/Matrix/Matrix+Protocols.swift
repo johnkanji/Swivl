@@ -33,9 +33,9 @@ extension Matrix: CustomStringConvertible where Scalar: SwivlNumeric {
 
   private func hasFractional() -> Bool {
     if Scalar.self is Double.Type {
-      return (_flat as! [Double]).reduce(true, { acc, v in acc && floor(v) !=~ v })
+      return (_flat as! [Double]).anySatisfy { $0 !=~ floor($0) }
     } else if Scalar.self is Float.Type {
-      return (_flat as! [Float]).reduce(true, { acc, v in acc && floor(v) ==~ v })
+      return (_flat as! [Float]).anySatisfy { $0 !=~ floor($0) }
     } else {
       return false
     }
