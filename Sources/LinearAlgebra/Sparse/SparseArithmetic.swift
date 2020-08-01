@@ -95,26 +95,30 @@ extension LinAlg {
     let n = b.shape.c
 
     var ri: [Int32] = []
+    ri.reserveCapacity(Swift.max(a.ri.count, b.ri.count))
     var cs: [Int] = [0]
+    cs.reserveCapacity(b.shape.c + 1)
     var v: [T] = []
+    v.reserveCapacity(Swift.max(a.v.count, b.v.count))
 
     for j in 0..<n {
       for i in 0..<m {
         let rngA = at.cs[i]..<at.cs[i+1]
-        let rva = zip(at.ri[rngA], at.v[rngA]).sorted(by: { $0.0 < $1.0 })
         let rngB = b.cs[j]..<b.cs[j+1]
-        let rvb = zip(b.ri[rngB], b.v[rngB]).sorted(by: { $0.0 < $1.0 })
+
+        let ria = at.ri[rngA]
+        let rib = b.ri[rngB]
 
         var cur_v: T = 0
         var ii = 0
         var jj = 0
-        //      Step throught the current row and column finding common nonzero indices
-        while ii < rva.count && jj < rvb.count {
-          if rva[ii].0 == rvb[jj].0 {
-            cur_v += rva[ii].1 * rvb[jj].1
+        //  Step throught the current row and column finding common nonzero indices
+        while ii < ria.count && jj < rib.count {
+          if ria[ria.startIndex + ii] == rib[rib.startIndex + jj] {
+            cur_v += at.v[ria.startIndex + ii] * b.v[rib.startIndex + jj]
           }
-          //        Increment the counter "further back" in its vector
-          if rva[ii].0 <= rvb[jj].0 {
+          //  Increment the counter "further back" in its vector
+          if ria[ria.startIndex + ii] <= rib[rib.startIndex + jj] {
             ii += 1
           } else {
             jj += 1
@@ -129,4 +133,21 @@ extension LinAlg {
     }
     return SpMat<T>(ri, cs, v, (m,n))
   }
+
+
+  public static func multiplyMatrixVector<T>(_ a: SpMat<T>, _ b: [T]) -> [T] where T: SwivlNumeric {
+    precondition(a.shape.c == b.count)
+
+    var y = [T](repeating: 0, count: a.shape.r)
+    for r in 0..<a.shape.r {
+      for c in 0..<a.shape.c {
+        let ris = a.ri[a.cs[c]..<a.cs[c+1]]
+        if let ii = binarySearch(ris, for: Int32(r)) {
+          y[r] += b[c]*a.v[ii]
+        }
+      }
+    }
+    return y
+  }
+
 }

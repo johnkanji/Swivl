@@ -26,20 +26,19 @@ extension LinAlg {
   }
 
   public static func CSCToTriplet<T>(_ a: SpMat<T>) -> (rcs: [RowCol], v: [T]) where T: SwivlNumeric {
-    let Arcs: [RowCol] = a.ri.enumerated().map { i, r in
+    let rcs: [RowCol] = a.ri.enumerated().map { i, r in
       let c = a.cs.lastIndex(where: { ci in ci < i }) ?? 0
       return RowCol(Int(r), c)
     }
-    return (Arcs, a.v)
+    return (rcs, a.v)
   }
 
 
   public static func denseToCSC<T>(_ a: Mat<T>) -> SpMat<T>
   where T: SwivlNumeric {
-    let rcs = a.flat.enumerated().filter { i, v in v != 0 }.map { i, _ -> RowCol in
-      let d = Double(i)
-      let r = Int(floor(d/Double(a.shape.r)))
-      let c = Int(d.truncatingRemainder(dividingBy: Double(a.shape.r)))
+    let rcs = a.flat.enumerated().filter { i, v in v != 0 }.map { i, v -> RowCol in
+      let r = i / a.shape.c
+      let c = i - (r*a.shape.c)
       return RowCol(r, c)
     }
     let v = a.flat.filter { $0 != 0 }

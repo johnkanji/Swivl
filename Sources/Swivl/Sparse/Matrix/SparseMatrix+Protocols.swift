@@ -31,3 +31,27 @@ extension SparseMatrix: ExpressibleByArrayLiteral {
     self.init(LinAlg.hcat(elements.map(\._spmat)))
   }
 }
+
+extension SparseMatrix: ExpressibleByIntegerLiteral {
+  public typealias IntegerLiteralType = Int
+
+  public init(integerLiteral: IntegerLiteralType) {
+    self._rowIndices = [0]
+    self._columnStarts = [0, 1]
+    self._values = [Scalar(exactly: integerLiteral)!]
+    self._rows = 1
+    self._cols = 1
+  }
+}
+
+extension SparseMatrix: ExpressibleByFloatLiteral where Scalar: _ExpressibleByBuiltinFloatLiteral {
+  public typealias FloatLiteralType = Scalar
+
+  public init(floatLiteral: Scalar) {
+    self._rowIndices = [0]
+    self._columnStarts = [0, 1]
+    self._values = [floatLiteral]
+    self._rows = 1
+    self._cols = 1
+  }
+}

@@ -10,51 +10,52 @@
 import Foundation
 import LinearAlgebra
 
-extension Vector {
-  public subscript(row: Index, col: Index) -> Scalar {
-    get { layout == .rowMajor ? array[col] : array[row] }
-    set {
-      let i = layout == .rowMajor ? col: row
-      array[i] = newValue
-    }
-  }
-  
-  public var rows: Int { layout == .rowMajor ? 1 : array.count }
-  public var cols: Int { layout == .rowMajor ? array.count : 1 }
-  public var shape: RowCol { (rows, cols) }
-  
-  public var T: Self {
-    switch layout {
-    case .rowMajor:
-      return Self(column: array)
-    default:
-      return Self(row: array)
-    }
-  }
-
-  public static postfix func †(_ a: Self) -> Self {
-    a.T
-  }
-  
-  public mutating func transpose() {
-    if self.layout == .columnMajor {
-      self.layout = .rowMajor
-    } else {
-      self.layout = .columnMajor
-    }
-  }
-}
+//extension Vector {
+//  public subscript(row: Index, col: Index) -> Scalar {
+//    get {
+//      precondition(row == 0 || col == 0)
+//      return array[Swift.max(row, col)]
+//    }
+//    set {
+//      precondition(row == 0 || col == 0)
+//      array[Swift.max(row, col)] = newValue
+//    }
+//  }
+//
+//  public var rows: Int { layout == .rowMajor ? 1 : array.count }
+//  public var cols: Int { layout == .rowMajor ? array.count : 1 }
+//  public var shape: RowCol { (rows, cols) }
+//
+//  public var T: Self {
+//    switch layout {
+//    case .rowMajor:
+//      return Self(column: array)
+//    default:
+//      return Self(row: array)
+//    }
+//  }
+//
+//  public static postfix func †(_ a: Self) -> Self {
+//    a.T
+//  }
+//
+//  public mutating func transpose() {
+//    if self.layout == .columnMajor {
+//      self.layout = .rowMajor
+//    } else {
+//      self.layout = .columnMajor
+//    }
+//  }
+//}
 
 
 extension Vector: Equatable {
 
   public static func == (lhs: Self, rhs: Self) -> Bool {
-    lhs.layout == rhs.layout &&
     lhs.count == rhs.count &&
     lhs.array == rhs.array
   }
   public static func == (lhs: Self, rhs: Self) -> Bool where Scalar: ApproximatelyEquatable {
-    lhs.layout == rhs.layout &&
     lhs.count == rhs.count &&
     zip(lhs.array, rhs.array).allSatisfy { $0 ==~ $1 }
   }
@@ -67,15 +68,15 @@ extension Vector: Equatable {
 
 
 extension Vector: CustomStringConvertible {
-  public var description: String { array.description }
+  public var description: String { "\(type(of: self)) \(count)x1 " + array.description }
 }
 
 
 extension Vector: ExpressibleByArrayLiteral {
   public typealias ArrayLiteralElement = Scalar
 
-  public init(arrayLiteral elements: Scalar...) {
-    self.array = elements
+  public init(arrayLiteral elements: ArrayLiteralElement...) {
+    self.init(elements)
   }
 }
 

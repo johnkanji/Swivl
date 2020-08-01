@@ -18,16 +18,13 @@ public protocol VectorProtocol: Collection, Equatable where Element: Numeric {
   init()
 
   init(_ v: [Scalar])
-  init(row: [Scalar])
-
-  init(column: [Scalar])
-
-  init(_ array: [Scalar], shape: RowCol)
 
 
 //  MARK: Manipulation
 
   func diag<M>() -> M where M: MatrixProtocol, M.Scalar == Scalar
+
+  static func & (_ lhs: Self, _ rhs: Self) -> Self
 
 
 //  MARK: Unary Operators
@@ -182,17 +179,6 @@ public protocol VectorProtocol: Collection, Equatable where Element: Numeric {
 //  MARK: - Default Implementations
 
 extension VectorProtocol {
-
-//  MARK: Intitializers
-
-  public init(row: [Scalar]) {
-    self.init(row, shape: RowCol(1, row.count))
-  }
-
-  public init(column: [Scalar]) {
-    self.init(column, shape: RowCol(column.count, 1))
-  }
-
 
 //  MARK: Subscripts
 

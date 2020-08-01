@@ -27,10 +27,10 @@ extension SparseMatrix {
   //  MARK: Index/[Index]
 
   public subscript(_ rows: Index, _ cols: Vector<Index>) -> Vector<Scalar> {
-    Vector(LinAlg.gather(LinAlg.row(_spmat, rows), cols.array), shape: (1, cols.count))
+    Vector(LinAlg.gather(LinAlg.row(_spmat, rows), cols.array))
   }
   public subscript(_ rows: Vector<Index>, _ cols: Index) -> Vector<Scalar> {
-    Vector(LinAlg.gather(LinAlg.col(_spmat, cols), rows.array), shape: (rows.count, 1))
+    Vector(LinAlg.gather(LinAlg.col(_spmat, cols), rows.array))
   }
 
 
@@ -39,22 +39,22 @@ extension SparseMatrix {
   public subscript<R>(_ rows: Index, _ cols: R) -> Vector<Scalar>
   where R: RangeExpression, R.Bound == Int {
     let array = Array(LinAlg.row(_spmat, rows)[cols])
-    return Vector(array, shape: (1, array.count))
+    return Vector(array)
   }
   public subscript<R>(_ rows: R, _ cols: Index) -> Vector<Scalar>
   where R: RangeExpression, R.Bound == Int {
     let array = Array(LinAlg.col(_spmat, cols)[rows])
-    return Vector(array, shape: (array.count, 1))
+    return Vector(array)
   }
 
 
   //  MARK: Index/...
 
   public subscript(_ rows: Index, _ cols: UnboundedRange) -> Vector<Scalar> {
-    Vector(LinAlg.row(_spmat, rows), shape: (1, self.cols))
+    Vector(LinAlg.row(_spmat, rows))
   }
   public subscript(_ rows: UnboundedRange, _ cols: Index) -> Vector<Scalar> {
-    Vector(LinAlg.col(_spmat, cols), shape: (self.rows, 1))
+    Vector(LinAlg.col(_spmat, cols))
   }
 
 

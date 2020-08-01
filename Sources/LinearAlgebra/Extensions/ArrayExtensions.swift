@@ -78,15 +78,19 @@ public extension Array where Element: Collection {
 
 func binarySearch<R>(_ sortedArray: R, for elem: R.Element) -> Int?
 where R: RandomAccessCollection, R.Index == Int, R.Element: Comparable & Equatable {
-  let middle = (sortedArray.startIndex + sortedArray.endIndex) / 2
-  if sortedArray.count == 1 {
-    return sortedArray.first! == elem ? sortedArray.startIndex : nil
-  }
-  if elem == sortedArray[middle] {
-    return middle
-  } else if elem < sortedArray[middle] {
-    return binarySearch(sortedArray[..<middle], for: elem)
-  } else {
-    return binarySearch(sortedArray[middle...], for: elem)
+  var slice = sortedArray[...]
+  while true {
+    let middle = (slice.startIndex + (slice.endIndex)) / 2
+    if slice.isEmpty { return nil }
+    if slice.count == 1 {
+      return slice.first! == elem ? slice.startIndex : nil
+    }
+    if elem == slice[middle] {
+      return middle
+    } else if elem < slice[middle] {
+      slice = slice[..<middle]
+    } else {
+      slice = slice[middle...]
+    }
   }
 }

@@ -29,7 +29,7 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
   public var startIndex: Index { flat.startIndex }
   public var endIndex: Index { flat.endIndex }
 
-  var _mat: Mat<Scalar> { Mat<Scalar>(_flat, shape) }
+  public var _mat: Mat<Scalar> { Mat<Scalar>(_flat, shape) }
 
 
 //  MARK: Matrix Properties
@@ -92,7 +92,7 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
     self._layout = layout
   }
 
-  init(_ a: Mat<Scalar>, layout: MatrixLayout = .defaultLayout) {
+  public init(_ a: Mat<Scalar>, layout: MatrixLayout = .defaultLayout) {
     _flat = a.flat
     (_rows, _cols) = a.shape
   }
@@ -157,7 +157,7 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
     return Self.init(LinAlg.vcat(matrices.map(\._mat)))
   }
 
-  public static func || (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func & (_ lhs: Self, _ rhs: Self) -> Self {
     vcat(lhs, rhs)
   }
 
@@ -201,14 +201,13 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
   }
 
   public func square() -> Self {
-    Self(flat: _flat.map { $0*$0 }, shape: shape)
+    return Self(flat: _flat.map { $0*$0 }, shape: shape)
   }
   
   
 //  MARK: Arithmetic
   
   public static func add(_ lhs: Self, _ rhs: Self) -> Self {
-    precondition(lhs.shape == rhs.shape)
     return Self(flat: LinAlg.add(lhs._flat, rhs._flat), shape: lhs.shape)
   }
   public static func add(_ lhs: Self, _ rhs: Element) -> Self {
@@ -239,22 +238,8 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
     return Self(flat: LinAlg.divideScalar(lhs._flat, rhs), shape: lhs.shape)
   }
 
-  
-  public static func multiplyMatrix(_ lhs: Self, _ rhs: Self) -> Self {
-    precondition(lhs.cols == rhs.rows, "Matrix dimensions do not agree")
-    let (m, p) = lhs.shape
-    let n = rhs.cols
-    var out = zeros(m, n)
-    for r in 0..<m {
-      for c in 0..<n {
-        var acc: Scalar = 0
-        for i in 0..<p {
-          acc += lhs[r,i]*rhs[i,c]
-        }
-        out[r,c] = acc
-      }
-    }
-    return out
+  public static func multiplyMatrix(_ lhs: Matrix<Scalar>, _ rhs: Matrix<Scalar>) -> Matrix<Scalar> {
+    return Self(LinAlg.multiplyMatrix(lhs._mat, rhs._mat))
   }
   
   
@@ -285,10 +270,14 @@ public struct Matrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
   
   
 //  MARK: Conversion
-  
+
+  public func sparse() -> SparseMatrix<Scalar> {
+    SparseMatrix(self)
+  }
+
   public func vector<V>() -> V where V: VectorProtocol, V.Element == Scalar {
     precondition(rows == 1 || cols == 1)
-    return V(_flat, shape: shape)
+    return V(_flat)
   }
 
   public func to<U>(type: U.Type) -> Matrix<U> where U: SwivlNumeric {

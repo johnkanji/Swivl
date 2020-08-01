@@ -9,28 +9,55 @@
 
 import Foundation
 import Swivl
-//import LinearAlgebra
-
-let M = MatrixXd([
-  [0,2,0,4],
-  [5,0,0,0],
-  [0,3,0,3],
-  [0,1,0,7]])
-let Mt = M†
-let S = M.sparse()
-let St = Mt.sparse()
+import LinearAlgebra
+import simd
 
 
-print(M*M)
-print((S*S).dense())
+func time(averagedExecutions: Int = 1, _ code: () -> Void) {
+  let start = Date()
+  for _ in 0..<averagedExecutions { code() }
+  let end = Date()
 
+  let duration = end.timeIntervalSince(start) / Double(averagedExecutions)
 
-func S<T>(_ a: T) where T: SwivlFloatingPoint {
-  
+  print("time: \(duration)")
 }
 
-//func sp_print<T>(_ a: SpMat<T>) {
-//  (0..<a.cs.count-1).forEach { i in
-//    print(i, a.cs[i], a.ri[a.cs[i]..<a.cs[i+1]])
-//  }
-//}
+extension Matrix {
+
+  @_functionBuilder
+  class MatrixBuilder {
+    static func buildBlock(_ ms: Matrix...) -> Matrix {
+      Matrix(LinAlg.vcat(ms.map(\._mat)))
+    }
+
+    static func buildBlock(_ ms: [Scalar]...) -> Matrix {
+      Matrix(LinAlg.vcat(ms.map {Mat($0, (1, $0.count)) }))
+    }
+
+    static func buildExpression(_ row: [Scalar]) -> Matrix {
+      Matrix(flat: row, shape: (1, row.count))
+    }
+
+    static func buildExpression(_ mat: Matrix) -> Matrix {
+      mat
+    }
+  }
+
+  init(@MatrixBuilder content: () -> Self) {
+    self.init(content()._mat)
+  }
+
+}
+
+
+let M: MatrixXd = [4, 3, 2]
+let A = MatrixXd { M; [1, 2, 3] }
+print(A + 5)
+//                & [5, 6, 7]
+print(M)
+
+//let M2 = [     M,        M]
+//         [.eye(3), .eye(3)]
+
+//print(M2)

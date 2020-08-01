@@ -56,7 +56,7 @@ extension Matrix: RealMatrix where Scalar: SwivlFloatingPoint {
 
   // Override
   public func square() -> Self {
-    Self(flat: LinAlg.square(_flat), shape: shape)
+    return Self(flat: LinAlg.square(_flat), shape: shape)
   }
 
 // TODO: STUB
@@ -71,7 +71,7 @@ extension Matrix: RealMatrix where Scalar: SwivlFloatingPoint {
 
 
   //  MARK: Arithmetic
-  // Overrides
+  // Overrides (operators must be overriden too or the original implementation will be called)
 
   public static func multiplyElements(_ lhs: Self, _ rhs: Self) -> Self {
     precondition(lhs.shape == rhs.shape)
@@ -80,24 +80,35 @@ extension Matrix: RealMatrix where Scalar: SwivlFloatingPoint {
   public static func multiplyElements(_ lhs: Self, _ rhs: Element) -> Self {
     return Self(flat: LinAlg.multiplyScalar(lhs._flat, rhs), shape: lhs.shape)
   }
+  public static func .* (_ lhs: Self, _ rhs: Self) -> Self {
+    Self.multiplyElements(lhs, rhs)
+  }
+  public static func * (_ lhs: Self, _ rhs: Element) -> Self {
+    Self.multiplyElements(lhs, rhs)
+  }
+  public static func .* (_ lhs: Self, _ rhs: Element) -> Self {
+    Self.multiplyElements(lhs, rhs)
+  }
 
   public static func multiplyMatrix(_ lhs: Self, _ rhs: Self) -> Self {
-    return Self(LinAlg.multiplyMatrix(lhs._mat, rhs._mat))
+    Self(LinAlg.multiplyMatrix(lhs._mat, rhs._mat))
+  }
+  public static func * (_ lhs: Self, _ rhs: Self) -> Self {
+    Self.multiplyMatrix(lhs, rhs)
   }
 
   public static func multiplyMatrixVector(_ lhs: Self, _ rhs: Vector<Scalar>) -> Vector<Scalar> {
-    Vector(column: LinAlg.multiplyMatrixVector(lhs._mat, rhs.array))
+    Vector(LinAlg.multiplyMatrixVector(lhs._mat, rhs.array))
   }
   public static func multiplyMatrixVector(_ lhs: Vector<Scalar>, _ rhs: Self) -> Vector<Scalar> {
-    Vector(row: LinAlg.multiplyMatrixVector(rhs._mat, lhs.array))
+    Vector(LinAlg.multiplyMatrixVector(rhs._mat, lhs.array))
   }
   public static func * (_ lhs: Self, _ rhs: Vector<Scalar>) -> Vector<Scalar> {
-    Vector(column: LinAlg.multiplyMatrixVector(lhs._mat, rhs.array))
+    Vector(LinAlg.multiplyMatrixVector(lhs._mat, rhs.array))
   }
   public static func * (_ lhs: Vector<Scalar>, _ rhs: Self) -> Vector<Scalar> {
-    Vector(row: LinAlg.multiplyMatrixVector(rhs._mat, lhs.array))
+    Vector(LinAlg.multiplyMatrixVector(rhs._mat, lhs.array))
   }
-
 
   //  MARK: Matrix Creation
 
@@ -151,19 +162,12 @@ extension Matrix: RealMatrix where Scalar: SwivlFloatingPoint {
     let right = vectors == .right || vectors == .both
 
     let (V, DL, DR) = try! LinAlg.eig(_mat, vectors: vectors)
-    return (VR(row: V), left ? Self(DL!) : nil, right ? Self(DR!) : nil)
+    return (VR(V), left ? Self(DL!) : nil, right ? Self(DR!) : nil)
   }
 
   public func SVD<VR>(vectors: SingularVectorOutput = .none) -> (values: VR, leftVectors: Self?, rightVectors: Self?)
   where VR : VectorProtocol, VR.Scalar == Scalar {
     (VR(), nil, nil)
-  }
-
-
-//  MARK: Conversions
-
-  public func sparse() -> SparseMatrix<Scalar> {
-    SparseMatrix(self)
   }
   
 }

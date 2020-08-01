@@ -195,7 +195,7 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
     return Self.init(LinAlg.vcat(matrices.map(\._spmat)))
   }
 
-  public static func || (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func & (_ lhs: Self, _ rhs: Self) -> Self {
     vcat(lhs, rhs)
   }
 
@@ -336,12 +336,17 @@ public struct SparseMatrix<Scalar>: MatrixProtocol where Scalar: SwivlNumeric {
     Matrix(LinAlg.CSCToDense(_spmat))
   }
 
+  public func triplets() -> (Vector<Int>, Vector<Int>, Vector<Scalar>) {
+    let (rc,v) = LinAlg.CSCToTriplet(_spmat)
+    return (Vector(rc.map(\.r)), Vector(rc.map(\.c)), Vector(v))
+  }
+
   public func vector<V: VectorProtocol>() -> V where V.Scalar == Scalar {
     precondition(rows == 1 || cols == 1)
     if rows == 1 {
-      return V(row: LinAlg.row(_spmat, 0))
+      return V(LinAlg.row(_spmat, 0))
     } else {
-      return V(column: LinAlg.col(_spmat, 0))
+      return V(LinAlg.col(_spmat, 0))
     }
   }
 

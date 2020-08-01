@@ -15,6 +15,12 @@ extension LinAlg {
   //  MARK: - Vector-Vector arithmetic operations
   
   public static func add<T>(_ a: [T], _ b: [T]) -> [T] where T: SwivlNumeric {
+    if a.count == 1 {
+      return addScalar(b, a.first!)
+    } else if b.count == 1 {
+      return addScalar(a, b.first!)
+    }
+    precondition(a.count == b.count)
     let n = vDSP_Length(a.count)
     if T.self is Double.Type {
       var c = [Double](repeating: 0, count: a.count)
@@ -32,6 +38,7 @@ extension LinAlg {
   }
   
   public static func subtract<T>(_ a: [T], _ b: [T]) -> [T] where T: SwivlNumeric {
+    precondition(a.count == b.count)
     if T.self is Double.Type {
       return vDSP.subtract(a as! [Double], b as! [Double]) as! [T]
     } else if T.self is Float.Type {
@@ -42,6 +49,7 @@ extension LinAlg {
   }
   
   public static func multiplyElementwise<T>(_ a: [T], _ b: [T]) -> [T] where T: SwivlFloatingPoint {
+    precondition(a.count == b.count)
     if T.self is Double.Type {
       return vDSP.multiply(a as! [Double], b as! [Double]) as! [T]
     } else {
@@ -50,6 +58,7 @@ extension LinAlg {
   }
   
   public static func divideElementwise<T>(_ a: [T], _ b: [T]) -> [T] where T: SwivlNumeric {
+    precondition(a.count == b.count)
     if T.self is Double.Type {
       return vDSP.divide(a as! [Double], b as! [Double]) as! [T]
     } else if T.self is Float.Type {
@@ -63,6 +72,7 @@ extension LinAlg {
   }
   
   public static func dot<T>(_ a: [T], _ b: [T]) -> T where T: SwivlFloatingPoint {
+    precondition(a.count == b.count)
     if T.self is Double.Type {
       return vDSP.dot(a as! [Double], b as! [Double]) as! T
     } else {

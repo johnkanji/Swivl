@@ -20,18 +20,15 @@ extension LinAlg {
     var v: [T] = []
     v.reserveCapacity(a.v.count)
 
-    let ris = Set(a.ri).sorted()
-    let cis = (0..<a.cs.count-1).map { i in a.ri[a.cs[i]..<a.cs[i+1]].sorted() }
+    let ciOut = Set(a.ri).sorted()
+    cs.reserveCapacity(ciOut.count + 1)
 
-    var counter = [Int](repeating: 0, count: cis.count)
-    for i in ris {
-      for j in 0..<cis.count {
-        while counter[j] < cis[j].count && cis[j][counter[j]] <= i {
-          if cis[j][counter[j]] == i {
-            ri.append(Int32(j))
-            v.append(a.v[a.cs[j] + counter[j]])
-          }
-          counter[j] += 1
+    for cOut in ciOut {
+      for cIn in 0..<a.shape.c {
+        let riIn = a.ri[a.cs[cIn]..<a.cs[cIn+1]]
+        if let ii = binarySearch(riIn, for: cOut) {
+          ri.append(Int32(cIn))
+          v.append(a.v[ii])
         }
       }
       cs.append(ri.count)

@@ -83,10 +83,37 @@ extension Matrix: CustomStringConvertible where Scalar: SwivlNumeric {
 }
 
 extension Matrix: ExpressibleByArrayLiteral {
-  public typealias ArrayLiteralElement = Self
+  public typealias ArrayLiteralElement = Scalar
 
-  public init(arrayLiteral elements: Self...) {
-    self.init(LinAlg.hcat(elements.map(\._mat)))
+  public init(arrayLiteral elements: ArrayLiteralElement...) {
+    self.init(rows: [elements])
   }
 }
 
+//extension Matrix: ExpressibleByArrayLiteral {
+//  public typealias ArrayLiteralElement = Self
+//
+//  public init(arrayLiteral elements: Self...) {
+//    self.init(LinAlg.hcat(elements.map(\._mat)))
+//  }
+//}
+//
+//extension Matrix: ExpressibleByIntegerLiteral {
+//  public typealias IntegerLiteralType = Int
+//
+//  public init(integerLiteral: IntegerLiteralType) {
+//    self._flat = [Scalar(exactly: integerLiteral)!]
+//    self._rows = 1
+//    self._cols = 1
+//  }
+//}
+//
+//extension Matrix: ExpressibleByFloatLiteral where Scalar: _ExpressibleByBuiltinFloatLiteral {
+//  public typealias FloatLiteralType = Scalar
+//
+//  public init(floatLiteral: Scalar) {
+//    self._flat = [floatLiteral]
+//    self._rows = 1
+//    self._cols = 1
+//  }
+//}

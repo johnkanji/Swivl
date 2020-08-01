@@ -27,7 +27,7 @@ extension Matrix {
     DispatchQueue.concurrentPerform(iterations: shape.r) { r in
       out[r] = closure(self[r,...])
     }
-    return Vector(column: out)
+    return Vector(out)
   }
   
   public func colwise<R>(_ closure: (Vector<Scalar>) -> Vector<R>) -> Matrix<R> {
@@ -45,7 +45,7 @@ extension Matrix {
     DispatchQueue.concurrentPerform(iterations: shape.c) { c in
       out[c] = closure(self[...,c])
     }
-    return Vector(row: out)
+    return Vector(out)
   }
   
   

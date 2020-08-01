@@ -15,7 +15,6 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
   public typealias Index = Array<Scalar>.Index
 
   public var array: [Element]
-  var layout: MatrixLayout = .columnMajor
   
   public var count: Int { array.count }
   public var startIndex: Index { array.startIndex }
@@ -30,30 +29,6 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
 
   public init(_ v: [Scalar]) {
     array = v
-  }
-
-  init(_ v: [Scalar], _ layout: MatrixLayout) {
-    switch layout {
-    case .rowMajor:
-      self.init(row: v)
-    default:
-      self.init(column: v)
-    }
-  }
-  
-  public init(row: [Scalar]) {
-    self.init(row)
-    self.layout = .rowMajor
-  }
-  
-  public init(column: [Scalar]) {
-    self.init(column)
-  }
-  
-  public init(_ array: [Scalar], shape: RowCol) {
-    precondition(shape.r == 1 || shape.c == 1)
-    self.array = array
-    self.layout = shape.r == 1 ? .rowMajor : .columnMajor
   }
 
 
@@ -83,7 +58,7 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
     Self(LinAlg.reverse(self.array))
   }
 
-  static func || (_ lhs: Self, _ rhs: Self) -> Self {
+  public static func & (_ lhs: Self, _ rhs: Self) -> Self {
     Self(lhs.array + rhs.array)
   }
 
@@ -91,11 +66,11 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
   //  MARK: Unary Operators
 
   public static func negate(_ lhs: Self) -> Self {
-    Self(lhs.array.map { x in -x }, lhs.layout)
+    Self(lhs.array.map { x in -x })
   }
 
   public func abs() -> Self {
-    Self(LinAlg.abs(array), layout)
+    Self(LinAlg.abs(array))
   }
 
   public func max() -> Scalar? {
@@ -123,7 +98,7 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
   }
 
   public func square() -> Self {
-    Self(array.map { $0*$0 }, layout)
+    Self(array.map { $0*$0 })
   }
 
   
@@ -176,12 +151,16 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
 
 //  MARK: Conversions
 
-  public func matrix() -> Matrix<Scalar> {
-    Matrix(flat: array, shape: RowCol(rows, cols))
+  public func matrix(_ dim: MatrixDimension = .col) -> Matrix<Scalar> {
+    Matrix(flat: array, shape: dim == .col ? (count, 1) : (1, count))
   }
 
   public func to<U>(type: U.Type) -> Vector<U> where U: SwivlNumeric {
-    Vector<U>(LinAlg.toType(array, type), layout)
+    if U.self is Scalar.Type {
+      return self as! Vector<U>
+    } else {
+      return Vector<U>(LinAlg.toType(array, type))
+    }
   }
   
 }

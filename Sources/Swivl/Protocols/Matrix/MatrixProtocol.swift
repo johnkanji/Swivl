@@ -10,7 +10,7 @@
 import Foundation
 import LinearAlgebra
 
-public protocol MatrixProtocol: Collection, Equatable where Element: Numeric {
+public protocol MatrixProtocol: Collection, Equatable where Element: SwivlNumeric, Index == Int {
   typealias Scalar = Element
 
   var rows: Int { get }

@@ -59,3 +59,9 @@ public protocol SwivlFloatingPoint: ApproximatelyEquatable, SwivlNumeric {
 
 extension Double: SwivlFloatingPoint {}
 extension Float: SwivlFloatingPoint {}
+
+
+public protocol SwivlInteger: SwivlNumeric {}
+
+extension Int32: SwivlInteger {}
+extension Int: SwivlInteger {}

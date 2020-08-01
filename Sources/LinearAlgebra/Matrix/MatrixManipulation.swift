@@ -11,7 +11,9 @@ import Foundation
 import Accelerate
 
 extension LinAlg {
-  
+
+//  MARK: Transpose
+
   public static func transpose<T>(_ a: Mat<T>) -> Mat<T> where T: SwivlNumeric {
     precondition(memoryCompatible(Double.self, T.self) || memoryCompatible(Float.self, T.self))
 
@@ -35,6 +37,8 @@ extension LinAlg {
     return (c, (a.shape.c, a.shape.r))
   }
 
+
+//  MARK: Extraction
   
   public static func col<T>(_ a: Mat<T>, _ c: Int) -> [T]
   where T: SwivlNumeric {
@@ -112,36 +116,76 @@ extension LinAlg {
       return (c, shapeOut)
     }
   }
+
+
+//  MARK: Insertion
   
   public static func setBlock<T>(
     _ a: UnsafeMutablePointer<T>, _ shapeA: RowCol, _ b: Mat<T>, startIndex: RowCol)
   where T: SwivlNumeric {
     precondition(memoryCompatible(Double.self, T.self) || memoryCompatible(Float.self, T.self))
+    precondition(startIndex.r + b.shape.r <= shapeA.r && startIndex.c + b.shape.c <= shapeA.c,
+                 "Index out of range")
     
     let m = vDSP_Length(b.shape.c)
     let n = vDSP_Length(b.shape.r)
     let tc = vDSP_Length(shapeA.c)
-    let i = startIndex.r * shapeA.c + startIndex.c
+    let i0 = startIndex.r * shapeA.c + startIndex.c
     if memoryCompatible(Double.self, T.self) {
-      b.flat.withUnsafeBufferPointer(as: Double.self) { ptrB in
-        a.withMemoryRebound(to: Double.self, capacity: shapeA.r*shapeA.c) { pa in
-          vDSP_mmovD(ptrB.baseAddress!, pa + i, m, n, m, tc)
+      b.flat.withUnsafeBufferPointer(as: Double.self) { pB in
+        a.withMemoryRebound(to: Double.self, capacity: shapeA.r*shapeA.c) { pA in
+          vDSP_mmovD(pB.baseAddress!, pA + i0, m, n, m, tc)
         }
       }
     } else {
-      b.flat.withUnsafeBufferPointer(as: Float.self) { ptrB in
-        a.withMemoryRebound(to: Float.self, capacity: shapeA.r*shapeA.c) { pa in
-          vDSP_mmov(ptrB.baseAddress!, pa + i, m, n, m, tc)
+      b.flat.withUnsafeBufferPointer(as: Float.self) { pB in
+        a.withMemoryRebound(to: Float.self, capacity: shapeA.r*shapeA.c) { pA in
+          vDSP_mmov(pB.baseAddress!, pA + i0, m, n, m, tc)
         }
       }
     }
   }
 
+  public static func setRow<T>(_ a: UnsafeMutablePointer<T>, _ shapeA: RowCol, _ b: [T], _ r: Int)
+  where T: SwivlNumeric {
+    precondition(memoryCompatible(Double.self, T.self) || memoryCompatible(Float.self, T.self))
+    precondition(b.count == shapeA.c)
+    precondition(r >= 0 && r < shapeA.r, "Index out of range")
+
+    setBlock(a, shapeA, (b, (1, b.count)), startIndex: (r,0))
+  }
+
+  public static func setCol<T>(_ a: UnsafeMutablePointer<T>, _ shapeA: RowCol, _ b: [T], _ c: Int)
+  where T: SwivlNumeric {
+    precondition(memoryCompatible(Double.self, T.self) || memoryCompatible(Float.self, T.self))
+    precondition(b.count == shapeA.r)
+    precondition(c >= 0 && c < shapeA.c, "Index out of range")
+
+    setBlock(a, shapeA, (b, (b.count, 1)), startIndex: (0,c))
+  }
+
+  public static func scatter<T>(
+    _ a: UnsafeMutablePointer<T>, _ shapeA: RowCol, _ b: [T], _ ri: [Int], _ ci: [Int])
+  where T: SwivlNumeric {
+    precondition(memoryCompatible(Double.self, T.self) || memoryCompatible(Float.self, T.self))
+    precondition(b.count == ri.count && b.count == ci.count)
+    precondition(ri.min()! >= 0 && ri.max()! < shapeA.r && ci.min()! >= 0 && ci.max()! < shapeA.c,
+                 "Index out of range")
+    for i in (0..<b.count) {
+      (a + (ri[i]*shapeA.c + ci[i])).pointee = b[i]
+    }
+  }
+
+
+//  MARK: Concatenation
 
   public static func hcat<T>(_ ms: [Mat<T>]) -> Mat<T>
   where T: SwivlNumeric {
+    precondition(!ms.isEmpty)
     precondition(ms.allSatisfy { m in m.shape.r == ms[0].shape.r })
     precondition(memoryCompatible(Double.self, T.self) || memoryCompatible(Float.self, T.self))
+
+    if ms.count == 1 { return ms.first! }
 
     let shapeOut = RowCol(ms[0].shape.r, ms.map({ $0.shape.c }).sum())
     let n = vDSP_Length(shapeOut.r)
@@ -179,14 +223,20 @@ extension LinAlg {
   
   public static func vcat<T>(_ ms: [Mat<T>]) -> Mat<T>
   where T: SwivlNumeric {
+    precondition(!ms.isEmpty)
     precondition(ms.allSatisfy { m in m.shape.c == ms[0].shape.c })
+
+    if ms.count == 1 { return ms.first! }
+
     return (ms.map(\.flat).chained(), (ms.map({ $0.shape.r }).sum(), ms[0].shape.c))
   }
   public static func vcat<T>(_ a: Mat<T>, _ b: Mat<T>) -> Mat<T>
   where T: SwivlNumeric {
     vcat([a, b])
   }
-  
+
+
+//  MARK: Triangle
   
   static func triangularMask(_ shape: RowCol, tri: TriangularType, diagonal k: Int) -> [Int] {
     var k = k
