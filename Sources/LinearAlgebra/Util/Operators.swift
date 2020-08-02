@@ -13,21 +13,9 @@ precedencegroup EquivalencePrecedence {
   lowerThan: AdditionPrecedence
 }
 
-precedencegroup ExponetiationPrecedence {
-  higherThan: MultiplicationPrecedence
-}
-
 infix operator ==~ : EquivalencePrecedence
 infix operator !=~ : EquivalencePrecedence
 infix operator <=~ : ComparisonPrecedence
 infix operator >=~ : ComparisonPrecedence
 infix operator <~ : ComparisonPrecedence
 infix operator >~ : ComparisonPrecedence
-
-infix operator .* : MultiplicationPrecedence
-infix operator ./ : MultiplicationPrecedence
-infix operator .^ : ExponetiationPrecedence
-
-prefix operator √
-
-postfix operator †

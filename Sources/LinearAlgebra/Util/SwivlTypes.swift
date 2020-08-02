@@ -29,11 +29,11 @@ extension ApproximatelyEquatable {
 }
 
 extension Double: ApproximatelyEquatable {
-  public static var approximateEqualityTolerance: Self = 1e-12
+  public static var approximateEqualityTolerance: Self = 1e-10
 }
 
 extension Float: ApproximatelyEquatable {
-  public static var approximateEqualityTolerance: Self = 1e-12
+  public static var approximateEqualityTolerance: Self = 1e-6
 }
 
 

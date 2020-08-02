@@ -66,7 +66,7 @@ extension LinAlg {
     } else {
       let n = vDSP_Length(a.count)
       var c = [Int32](repeating: 0, count: a.count)
-      vDSP_vdivi(a as! [Int32], s1, b as! [Int32], s1, &c, s1, n)
+      vDSP_vdivi(b as! [Int32], s1, a as! [Int32], s1, &c, s1, n)
       return c as! [T]
     }
   }

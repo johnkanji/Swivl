@@ -1,5 +1,11 @@
 // swift-tools-version:5.2
-// Package.swift
+//  Package.swift
+//
+//  Copyright (c) 2020 John Kanji
+//
+//  This Source Code Form is subject to the terms of the Mozilla Public
+//  License, v. 2.0. If a copy of the MPL was not distributed with this
+//  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
 
 import PackageDescription
@@ -12,14 +18,18 @@ let package = Package(
     .library(name: "Swiggl", targets: ["Swiggl"]),
     .library(name: "Swivl", targets: ["Swivl"]),
   ],
+  dependencies: [
+    .package(url: "https://github.com/Quick/Quick.git", from: "2.0.0"),
+    .package(url: "https://github.com/Quick/Nimble.git", from: "8.1.1")
+  ],
   targets: [
-//    .systemLibrary(name: "CXSparse", path: "External/CXSparse"),
     .systemLibrary(name: "SuperLU", path: "External/SuperLU"),
     .systemLibrary(name: "OSQP", path: "External/OSQP"),
+    .systemLibrary(name: "ARPACK", path: "External/ARPACK"),
 
     .target(
       name: "LinearAlgebra",
-      dependencies: ["SuperLU", "OSQP"],
+      dependencies: ["SuperLU", "OSQP", "ARPACK"],
       cSettings: [.unsafeFlags(["-IExternal"])],
       linkerSettings: [.unsafeFlags(["-LExternal/lib"])]
     ),
@@ -33,8 +43,8 @@ let package = Package(
       name:"Test",
       dependencies: ["Swivl"]),
     
-//    .testTarget(
-//      name: "SwigglTests",
-//      dependencies: ["Swiggl"])
+    .testTarget(
+      name: "SwivlTests",
+      dependencies: ["Swivl", "Quick", "Nimble"])
   ]
 )

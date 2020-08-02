@@ -14,6 +14,8 @@ extension Vector: RealVector where Scalar: SwivlFloatingPoint {
 
 //  MARK: Unary Operators
 
+  public var length: Scalar { sqrt(self.squaredLength) }
+
   public func mean() -> Scalar {
     LinAlg.mean(array)
   }
@@ -41,11 +43,11 @@ extension Vector: RealVector where Scalar: SwivlFloatingPoint {
 //  MARK: Geometric Operations
   
   public static func dist(_ lhs: Self, _ rhs: Self) -> Scalar {
-    LinAlg.dist(lhs.array, rhs.array)
+    sqrt(LinAlg.dist(lhs.array, rhs.array))
   }
 
   public static func normalize(_ v: Self) -> Self {
-    v / v.length
+    v ./ v.length
   }
 
 //  TODO: STUB
@@ -60,9 +62,6 @@ extension Vector: RealVector where Scalar: SwivlFloatingPoint {
   }
   public func cross(_ v: Self) -> Self { Self.cross(self, v) }
 
-  func _length() -> Scalar {
-    LinAlg.length(array)
-  }
 
 
 //  MARK: Vector Creation

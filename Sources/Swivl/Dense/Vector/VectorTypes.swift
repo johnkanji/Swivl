@@ -54,7 +54,7 @@ extension VectorXi {
   }
   
   public var length: Double {
-    sqrt(Double(array.map { $0*$0 }.sum()))
+    sqrt(Double(self.squaredLength))
   }
   
 }

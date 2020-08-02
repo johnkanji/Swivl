@@ -1,7 +1,9 @@
 import XCTest
+import Quick
 
-import SwigglTests
+@testable import VectorSpec
 
-var tests = [XCTestCaseEntry]()
-tests += SwigglTests.allTests()
-XCTMain(tests)
+QCKMain([
+  VectorSpec.self,
+  SampleLibrarySpec.self,
+])

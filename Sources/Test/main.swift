@@ -61,3 +61,16 @@ print(M)
 //         [.eye(3), .eye(3)]
 
 //print(M2)
+
+//let v1: VectorXi = [1,2,3,4,5]
+let v1: VectorXd = [1,2,3,4,5]
+let v2: VectorXd = [-8,7,9,-6,5]
+
+print(v1 ./ 2)
+
+
+let v3: VectorXi = [1,2,3,4,5]
+let v4: VectorXi = [-8,7,9,-6,5]
+
+print(v3 ./ 2)
+

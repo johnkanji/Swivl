@@ -154,6 +154,16 @@ public protocol VectorProtocol: Collection, Equatable where Element: Numeric {
   /// - Returns: result of elementwise division of vector a by scalar b
   static func divide(_ lhs: Self, _ rhs: Scalar) -> Self
 
+
+  /// Perform vector right division.
+  ///
+  /// - Parameters
+  ///     - lhs: left vector
+  ///     - rhs: right vector
+  /// - Returns: result of elementwise division of a by b
+  static func divide(_ lhs: Self, _ rhs: Self) -> Self
+
+
   
 // MARK: Vector Creation
   
@@ -193,8 +203,8 @@ extension VectorProtocol {
 
 //  MARK: Unary Operators
 
-  func _length() -> Scalar {
-    (self.*self).sum()
+  var squaredLength: Scalar {
+    self*self
   }
 
 
@@ -251,6 +261,17 @@ extension VectorProtocol {
   /// - Returns: elementwise vector product of a and b
   public static func .* (_ lhs: Self, _ rhs: Self) -> Self {
     Self.multiply(lhs, rhs)
+  }
+
+
+  /// Perform vector right division.
+  ///
+  /// - Parameters
+  ///     - lhs: left vector
+  ///     - rhs: right vector
+  /// - Returns: result of elementwise division of a by b
+  public static func ./ (_ lhs: Self, _ rhs: Self) -> Self {
+    Self.divide(lhs, rhs)
   }
 
   

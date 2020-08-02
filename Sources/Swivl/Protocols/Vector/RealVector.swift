@@ -10,32 +10,15 @@
 import Foundation
 import LinearAlgebra
 
-public protocol RealVector: VectorProtocol {
-
-//  MARK: Vector Properties
-
-  var length: Scalar { get }
-
+public protocol RealVector: VectorProtocol where Scalar: SwivlFloatingPoint {
 
 //  MARK: Unary Operators
 
   func mean() -> Scalar
 
-
-//  MARK: Arithmetic
-
-  /// Perform vector right division.
-  ///
-  /// Alternatively, `divide(lhs, rhs)` can be executed with `a ./ b`.
-  ///
-  /// - Parameters
-  ///     - lhs: left vector
-  ///     - rhs: right vector
-  /// - Returns: result of elementwise division of a by b
-  static func divide(_ lhs: Self, _ rhs: Self) -> Self
-
-
   //  MARK: Geometric Operations
+
+  var length: Scalar { get }
 
   static func normalize(_ v: Self) -> Self
 
@@ -54,31 +37,20 @@ public protocol RealVector: VectorProtocol {
   
 }
 
+
+//  MARK: Default Implementations
+
 extension RealVector {
-
-  public var length: Scalar { self._length() }
-  public var norm: Scalar { self._length() }
-
 
 //  MARK: Geometric Operations
 
-  public func dist(_ v: Self) -> Scalar { Self.dist(self, v) }
+  public var norm: Scalar { self.length }
+
+  public var normalized: Self { Self.normalize(self) }
+
+  public func dist(to v: Self) -> Scalar { Self.dist(self, v) }
 
   public func project(onto v: Self) -> Self { Self.project(self, onto: v) }
 
-  public func normalized() -> Self { Self.normalize(self) }
-
-
-  /// Perform vector right division.
-  ///
-  /// Alternatively, `a ./ b` can be executed with `divide(lhs, rhs)`.
-  ///
-  /// - Parameters
-  ///     - lhs: left vector
-  ///     - rhs: right vector
-  /// - Returns: result of elementwise division of a by b
-  static func ./ (_ lhs: Self, _ rhs: Self) -> Self {
-    Self.divide(lhs, rhs)
-  }
 
 }

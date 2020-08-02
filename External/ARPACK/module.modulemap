@@ -1,0 +1,7 @@
+module ARPACK {
+  header "shim.h"
+  header "include/arpack.h"
+  link "arpack"
+  export *
+}
+
