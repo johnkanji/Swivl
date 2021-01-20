@@ -48,12 +48,14 @@ extension LinAlg {
     }
   }
   
-  public static func multiplyElementwise<T>(_ a: [T], _ b: [T]) -> [T] where T: SwivlFloatingPoint {
+  public static func multiplyElementwise<T>(_ a: [T], _ b: [T]) -> [T] where T: SwivlNumeric {
     precondition(a.count == b.count)
     if T.self is Double.Type {
       return vDSP.multiply(a as! [Double], b as! [Double]) as! [T]
-    } else {
+    } else if T.self is Float.Type {
       return vDSP.multiply(a as! [Float], b as! [Float]) as! [T]
+    } else {
+      return zip(a, b).map { l, r in l * r }
     }
   }
   
@@ -71,12 +73,14 @@ extension LinAlg {
     }
   }
   
-  public static func dot<T>(_ a: [T], _ b: [T]) -> T where T: SwivlFloatingPoint {
+  public static func dot<T>(_ a: [T], _ b: [T]) -> T where T: SwivlNumeric {
     precondition(a.count == b.count)
     if T.self is Double.Type {
       return vDSP.dot(a as! [Double], b as! [Double]) as! T
-    } else {
+    } else if T.self is Float.Type {
       return vDSP.dot(a as! [Float], b as! [Float]) as! T
+    } else {
+      return zip(a, b).reduce(0) { (acc, val) -> T in acc+(val.0*val.1) }
     }
   }
   
@@ -100,11 +104,13 @@ extension LinAlg {
     return addScalar(a, -b)
   }
   
-  public static func multiplyScalar<T>(_ a: [T], _ b: T) -> [T] where T: SwivlFloatingPoint {
+  public static func multiplyScalar<T>(_ a: [T], _ b: T) -> [T] where T: SwivlNumeric {
     if T.self is Double.Type {
       return vDSP.multiply(b as! Double, a as! [Double]) as! [T]
-    } else {
+    } else if T.self is Float.Type {
       return vDSP.multiply(b as! Float, a as! [Float]) as! [T]
+    } else {
+      return a.map { l in l * b }
     }
   }
 

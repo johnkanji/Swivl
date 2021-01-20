@@ -12,11 +12,13 @@ import Accelerate
 
 extension LinAlg {
   
-  public static func negate<T>(_ a: [T]) -> [T] where T: SwivlFloatingPoint {
+  public static func negate<T>(_ a: [T]) -> [T] where T: SwivlNumeric {
     if T.self is Double.Type {
       return vDSP.negative(a as! [Double]) as! [T]
-    } else {
+    } else if T.self is Float.Type {
       return vDSP.negative(a as! [Float]) as! [T]
+    } else {
+      return a.map { -$0 }
     }
   }
   
@@ -68,11 +70,13 @@ extension LinAlg {
   }
   
   
-  public static func sum<T>(_ a: [T]) -> T where T: SwivlFloatingPoint {
+  public static func sum<T>(_ a: [T]) -> T where T: SwivlNumeric {
     if T.self is Double.Type {
       return vDSP.sum(a as! [Double]) as! T
-    } else {
+    } else if T.self is Float.Type {
       return vDSP.sum(a as! [Float]) as! T
+    } else {
+      return a.sum()
     }
   }
   
@@ -85,11 +89,13 @@ extension LinAlg {
   }
   
   
-  public static func square<T>(_ a: [T]) -> [T] where T: SwivlFloatingPoint {
+  public static func square<T>(_ a: [T]) -> [T] where T: SwivlNumeric {
     if T.self is Double.Type {
       return vDSP.square(a as! [Double]) as! [T]
-    } else {
+    } else if T.self is Float.Type {
       return vDSP.square(a as! [Float]) as! [T]
+    } else {
+      return a.map { $0*$0 }
     }
   }
   

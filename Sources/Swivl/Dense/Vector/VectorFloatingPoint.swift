@@ -14,30 +14,12 @@ extension Vector: RealVector where Scalar: SwivlFloatingPoint {
 
 //  MARK: Unary Operators
 
-  public var length: Scalar { sqrt(self.squaredLength) }
+  public var length: Scalar { LinAlg.length(array) }
 
   public func mean() -> Scalar {
     LinAlg.mean(array)
   }
 
-  
-//  MARK: Binary Operators
-//  Overrides
-  
-  public static func subtract(_ lhs: Self, _ rhs: Self) -> Self {
-    Self(LinAlg.subtract(lhs.array, rhs.array))
-  }
-
-  public static func multiply(_ lhs: Self, _ rhs: Self) -> Self {
-    Self(LinAlg.multiplyElementwise(lhs.array, rhs.array))
-  }
-  public static func multiply(_ lhs: Self, _ rhs: Scalar) -> Self {
-    Self(LinAlg.multiplyScalar(lhs.array, rhs))
-  }
-
-  public static func dot(_ lhs: Self, _ rhs: Self) -> Scalar {
-    LinAlg.dot(lhs.array, rhs.array)
-  }
 
 
 //  MARK: Geometric Operations

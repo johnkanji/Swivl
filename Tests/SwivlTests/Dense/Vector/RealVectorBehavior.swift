@@ -15,10 +15,8 @@ class RealVectorBehavior<T>: Behavior<Vector<T>> where T: SwivlFloatingPoint {
   override class func spec(_ context: @escaping () -> Vector<T>) {
     var vec: Vector<T>!
     var other: Vector<T>!
-    var empty: Vector<T>!
     beforeEach {
       vec = context()
-      empty = []
     }
 
     func err(_ actual: T, _ expected: T) -> T {

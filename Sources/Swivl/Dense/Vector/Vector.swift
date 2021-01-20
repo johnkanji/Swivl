@@ -66,7 +66,7 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
   //  MARK: Unary Operators
 
   public static func negate(_ lhs: Self) -> Self {
-    Self(lhs.array.map { x in -x })
+    Self(LinAlg.negate(lhs.array))
   }
 
   public func abs() -> Self {
@@ -90,7 +90,7 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
   }
 
   public func sum() -> Scalar {
-    array.sum()
+    LinAlg.sum(array)
   }
 
   public func mean<R>() -> R where R: SwivlFloatingPoint {
@@ -98,7 +98,7 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
   }
 
   public func square() -> Self {
-    Self(array.map { $0*$0 })
+    Self(LinAlg.square(array))
   }
 
   
@@ -112,17 +112,17 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
   }
 
   public static func subtract(_ lhs: Self, _ rhs: Self) -> Self {
-    lhs + (-rhs)
+    Self(LinAlg.subtract(lhs.array, rhs.array))
   }
   public static func subtract(_ lhs: Self, _ rhs: Scalar) -> Self {
     Self(LinAlg.subtractScalar(lhs.array, rhs))
   }
 
   public static func multiply(_ lhs: Self, _ rhs: Self) -> Self {
-    Self(zip(lhs.array, rhs.array).map { l, r in l * r })
+    Self(LinAlg.multiplyElementwise(lhs.array, rhs.array))
   }
   public static func multiply(_ lhs: Self, _ rhs: Scalar) -> Self {
-    Self(lhs.array.map { l in l * rhs })
+    Self(LinAlg.multiplyScalar(lhs.array, rhs))
   }
 
   public static func divide(_ lhs: Self, _ rhs: Self) -> Self {
@@ -134,7 +134,7 @@ public struct Vector<Scalar>: VectorProtocol where Scalar: SwivlNumeric {
 
 
   public static func dot(_ lhs: Self, _ rhs: Self) -> Scalar {
-    return zip(lhs, rhs).map{ l, r -> Scalar in l*r }.sum()
+    return LinAlg.dot(lhs.array, rhs.array)
   }
 
 
