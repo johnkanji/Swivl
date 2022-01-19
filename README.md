@@ -1,4 +1,5 @@
 # Swivl - Swift Vector Library
+<img src="swivl_logo.png" width="200" />
 
 A set of BLAS-accelerated linerar algebra structures and functions. Includes dense and sparse matrices and vectors, and various solvers.
 Features:
